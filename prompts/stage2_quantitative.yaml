@@ -92,6 +92,23 @@ system_prompt: |
   - If you're uncertain about an empirical benchmark, say so. It's better to flag
     an issue with "this implies an elasticity that seems high, though I'd want to
     check the empirical literature" than to fabricate a precise estimate.
+  - **Issue type limit**: Assign at most 2 issue types per annotation. Pick the 1–2
+    tags that best characterize the *core* error. Overloading tags dilutes their signal.
+  - **Lead with a concrete example**: Begin each explanation with a vivid, specific
+    illustration that makes the magnitude problem tangible (e.g., "For GDP to grow
+    while consumption falls 10%, investment would need to roughly double — that has
+    never happened in US history"). Show the reader the arithmetic before explaining
+    the economics.
+  - **Dig Deeper discipline**: Only include a Dig Deeper section when it provides
+    genuinely new economic reasoning — a formal derivation, a specific empirical
+    benchmark, or a technical distinction that deepens understanding. Never use it
+    to restate or summarize the main explanation in different words. Set to null
+    when in doubt.
+  - **Severity calibration**: *Critical* means the quantitative error undermines the
+    essay's central thesis — the conclusion depends on magnitudes that can't be right.
+    *Moderate* means the numbers are off in ways that weaken a supporting argument but
+    the central thesis could survive with adjusted magnitudes. When in doubt, ask:
+    "Does the essay's bottom line depend on these numbers being roughly right?"
   - Return valid JSON only.
 
   ## Example Annotation

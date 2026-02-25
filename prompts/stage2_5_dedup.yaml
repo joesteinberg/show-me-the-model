@@ -48,17 +48,24 @@ system_prompt: |
 
   ## Merge Criteria
 
+  **Default stance: consolidate aggressively.** A single annotation that makes a
+  devastating, multi-faceted argument is far more effective than three smaller
+  annotations that each make one piece of that argument. The gold standard is
+  fewer, sharper points — not comprehensive coverage of every sub-issue.
+
   Two annotations should be merged if:
   - They quote the same passage (or substantially overlapping passages)
   - They identify the same underlying economic error, even if labeled with
     different issue types
   - One annotation's explanation is essentially a subset of the other's
+  - They address different facets of the same core error (e.g., three annotations
+    that are all really about "the author ignores general-equilibrium reallocation")
+    — combine them into one powerful annotation that builds the full case
 
   Two annotations should be kept separate if:
-  - They address different aspects of the same passage (e.g., one flags the
-    accounting identity violation, another flags the internal contradiction
-    with a *different* passage)
-  - They identify genuinely different problems, even if in nearby text
+  - They address genuinely different economic errors, even if in nearby text
+  - Combining them would produce a muddled annotation that tries to make two
+    unrelated points at once
 
   ## Output Format
 
@@ -101,8 +108,17 @@ system_prompt: |
   - If Dig Deeper sections from different passes address the same topic, combine
     them. If they address different technical aspects, include both in a single
     Dig Deeper section.
-  - Aim for 5–12 final annotations for a typical essay. Fewer than 5 suggests
-    you're over-merging; more than 12 suggests you're not merging enough.
+  - **Target 5–8 final annotations for a typical essay.** Fewer than 5 suggests
+    you're over-merging; more than 8 suggests you're not consolidating enough.
+    Each annotation should be a standalone, devastating point. If two annotations
+    feel like "Part 1" and "Part 2" of the same argument, merge them.
+  - **Issue type limit**: Each final annotation should have at most 2 issue types.
+    When merging annotations with different tags, pick the 1–2 tags that best
+    characterize the *core* error. Don't union all tags from the source passes.
+  - **Dig Deeper quality control**: Only preserve Dig Deeper sections that add
+    genuinely new economic reasoning (a formal result, an empirical benchmark, a
+    technical distinction). Drop any that merely restate the main explanation in
+    different words.
   - Return valid JSON only.
 
 user_prompt_template: |

@@ -48,6 +48,16 @@ system_prompt: |
   5. **Missing sectors/agents**: The author focuses on the directly affected
      sector and ignores sectors that would expand in response (e.g., cheaper labor
      benefiting labor-intensive non-AI sectors).
+  6. **Monolithic categories**: The author treats a heterogeneous category as
+     uniform. The most common example in trade writing is treating "imports" as
+     finished consumer goods that compete with domestic production, when a large
+     share of imports are *intermediate inputs* (raw materials, components,
+     machinery) that domestic firms use to produce their own products. Cheaper
+     imported inputs *lower* domestic production costs and *boost* domestic output
+     — the opposite of the "imports displace production" story. Watch for any
+     argument that treats a diverse economic category (imports, investment,
+     government spending, debt) as a monolith without distinguishing the
+     components that work in opposite directions.
 
   ## Relevant Issue Types
 
@@ -95,6 +105,21 @@ system_prompt: |
     the full equilibrium would materially change the conclusion.
   - Be specific about *which* prices, markets, or agents are missing and *how*
     their inclusion would change the analysis.
+  - **Issue type limit**: Assign at most 2 issue types per annotation. Pick the 1–2
+    tags that best characterize the *core* error. Overloading tags dilutes their signal.
+  - **Lead with a concrete example**: Begin each explanation with a vivid, specific
+    illustration (e.g., "Imagine the price of T-shirts falls by half — consumers have
+    money left over for restaurants, healthcare, entertainment…") before building the
+    general argument. Make the missing GE effect feel tangible before explaining it.
+  - **Dig Deeper discipline**: Only include a Dig Deeper section when it provides
+    genuinely new economic reasoning — a formal result, an empirical finding, or a
+    technical distinction that deepens understanding. Never use it to restate or
+    summarize the main explanation in different words. Set to null when in doubt.
+  - **Severity calibration**: *Critical* means the GE effects would reverse the
+    essay's central thesis, not just attenuate it. *Moderate* means the GE effects
+    substantially weaken a supporting argument but the overall conclusion could survive.
+    When in doubt between the two, ask: "Does this missing adjustment change the
+    essay's bottom line?"
   - Return valid JSON only. No markdown, no commentary outside the JSON.
 
   ## Example Annotation
@@ -109,6 +134,21 @@ system_prompt: |
     "issue_types": ["PARTIAL_EQUILIBRIUM", "CETERIS_NON_PARIBUS"],
     "severity": "Critical",
     "explanation": "The essay presents the AI displacement spiral as a self-reinforcing loop with 'no natural brake.' But this traces out a story about quantities — how many workers, how much spending — while ignoring the most fundamental adjustment mechanism in economics: prices change.\n\nWhen large numbers of white-collar workers are displaced, several things happen that the essay doesn't account for. Wages adjust: if masses of workers are competing for fewer jobs, wages fall, making human labor cheaper relative to AI compute. At some point, for many tasks, it becomes cheaper to hire a person than to run the servers. That's a brake.\n\nThe return on investment falls: if consumer spending is declining, firms face weaker demand for their products. The payoff from any new investment — including AI investment — is lower. Why automate a production line if you can't sell the output?\n\nOther sectors expand: if millions of skilled workers are suddenly available at lower wages, sectors that were previously constrained by labor costs — manufacturing, construction, healthcare, education — can expand. Economists call this a general-equilibrium effect: the price adjustments that transmit a negative shock in one part of the economy can create opportunities elsewhere.\n\nNone of these brakes guarantee the transition is painless. But the claim that there's 'no natural brake' is inconsistent with basic price theory.",
+    "dig_deeper": null
+  }
+  ```
+
+  **Source text context:** An essay arguing that cheap imports harm American workers,
+  framing imports as finished consumer goods (T-shirts, cars) that displace domestic
+  production.
+
+  ```json
+  {
+    "title": "Imports Aren't Just Consumer Goods — They're Inputs to Production",
+    "quoted_passage": "That's why the simplistic claim that Americans 'win' by getting cheap T-shirts from Bangladesh or cheap cars from China misses the point.",
+    "issue_types": ["COMPOSITION_FALLACY", "MISSING_AGENT"],
+    "severity": "Critical",
+    "explanation": "The essay frames imports as finished consumer goods — T-shirts, cars — that compete with and displace domestic production. But a large and growing share of US imports are intermediate inputs: raw materials, components, machinery, and other goods that American firms use to produce their own products.\n\nWhen these inputs get cheaper, the cost of production for domestic firms falls. A car manufacturer that imports cheaper steel and semiconductors can produce more cars at lower cost, employ more workers, and sell at lower prices both at home and abroad. This runs directly counter to the essay's narrative that imports displace domestic production — cheaper imported inputs actually boost it.\n\nBy treating 'imports' as a monolithic category of finished goods, the essay misses the channel through which cheaper imports make American manufacturers more competitive. This isn't a minor omission — intermediate goods are a larger share of US imports than consumer goods.",
     "dig_deeper": null
   }
   ```

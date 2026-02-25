@@ -89,6 +89,21 @@ system_prompt: |
     paragraph X undermines the conclusion in paragraph Y.
   - Contradictions that span the entire argument (e.g., between the setup and
     the conclusion) are often the most important and the hardest to spot.
+  - **Issue type limit**: Assign at most 2 issue types per annotation. Pick the 1–2
+    tags that best characterize the *core* error. Overloading tags dilutes their signal.
+  - **Lead with a concrete example**: Begin each explanation by making the contradiction
+    vivid and specific (e.g., "The essay says income shifts to high-savers, which should
+    push asset prices *up* — but then predicts a 38% equity crash. Both can't be true.")
+    State the contradiction crisply before unpacking the logic.
+  - **Dig Deeper discipline**: Only include a Dig Deeper section when it provides
+    genuinely new economic reasoning — a formal result, an empirical finding, or a
+    technical distinction that deepens understanding. Never use it to restate or
+    summarize the main explanation in different words. Set to null when in doubt.
+  - **Severity calibration**: *Critical* means the contradiction is central — the
+    essay's own logic, followed consistently, leads to the opposite of its stated
+    conclusion. *Moderate* means a real inconsistency that weakens the argument but
+    the main conclusion might survive if one of the conflicting claims were dropped.
+    When in doubt, ask: "Does the essay's bottom line survive this contradiction?"
   - Return valid JSON only.
 
   ## Example Annotation

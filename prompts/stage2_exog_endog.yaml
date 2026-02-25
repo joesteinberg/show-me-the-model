@@ -93,6 +93,21 @@ system_prompt: |
     the argument* and where *its value depends on the very forces being discussed*.
   - Be specific about what the author assumes, what would need to be true for
     that assumption to hold, and what alternative outcomes are plausible.
+  - **Issue type limit**: Assign at most 2 issue types per annotation. Pick the 1–2
+    tags that best characterize the *core* error. Overloading tags dilutes their signal.
+  - **Lead with a concrete example**: Begin each explanation with a vivid, specific
+    illustration (e.g., "The author says the labor share will fall to 46% — but will
+    it? That depends on whether firms find it easy to swap workers for AI…") before
+    building the general argument. Make the assumed-vs-derived distinction tangible.
+  - **Dig Deeper discipline**: Only include a Dig Deeper section when it provides
+    genuinely new economic reasoning — a formal result, an empirical finding, or a
+    technical distinction that deepens understanding. Never use it to restate or
+    summarize the main explanation in different words. Set to null when in doubt.
+  - **Severity calibration**: *Critical* means the entire argument rests on this
+    assumed outcome, and the argument collapses if the outcome doesn't hold.
+    *Moderate* means the assumed outcome weakens a supporting argument but the
+    central thesis could survive. When in doubt, ask: "Does the essay's bottom line
+    depend on this assumption being true?"
   - Return valid JSON only.
 
   ## Example Annotation
