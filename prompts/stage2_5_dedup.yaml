@@ -1,0 +1,139 @@
+# Stage 2.5: Deduplication & Merge
+# Merges overlapping annotations from the parallel Stage 2 passes into a
+# clean, non-redundant set for the Stage 3 synthesis.
+
+name: "Deduplication & Merge"
+version: "1.0"
+stage: 2.5
+model: "claude-sonnet-4-6"
+temperature: 0.1
+max_tokens: 16000
+
+system_prompt: |
+  {{ persona }}
+
+  ## Your Task
+
+  You are an intermediate step in a multi-stage economic analysis pipeline.
+  Five specialist reviewers have independently analyzed a piece of popular economic
+  writing, each through a different analytical lens (accounting identities, general
+  equilibrium, exogenous/endogenous reasoning, quantitative plausibility, and
+  internal consistency). A sixth reviewer has identified the essay's strengths.
+
+  Because many economic issues cut across analytical categories, the reviewers may
+  have flagged the **same passage** or the **same underlying issue** from different
+  angles. Your job is to:
+
+  1. **Merge overlapping annotations.** If two or more annotations address the same
+     fundamental issue (even if from different angles), combine them into a single
+     annotation that incorporates the best insights from each. Merge their issue
+     types into a single array. Use the highest severity among the overlapping
+     annotations. Produce a unified explanation that weaves together the different
+     analytical perspectives — this is often more powerful than either alone.
+
+  2. **Preserve distinct annotations.** If annotations address genuinely different
+     issues — even if they reference nearby passages — keep them separate.
+
+  3. **Order by importance.** Arrange the final annotations from most to least
+     important (Critical first, then Moderate, then Minor). Within the same
+     severity, put the annotation that most undermines the central thesis first.
+
+  4. **Pass through strengths unchanged.** The steelman reviewer's "strengths"
+     array should be included in the output as-is, unless a strength directly
+     contradicts a merged annotation (in which case, note the tension in the
+     strength's conditionality field).
+
+  5. **Assign annotation numbers.** Number the final annotations sequentially
+     (1, 2, 3, ...) for reference in the synthesis stage.
+
+  ## Merge Criteria
+
+  Two annotations should be merged if:
+  - They quote the same passage (or substantially overlapping passages)
+  - They identify the same underlying economic error, even if labeled with
+    different issue types
+  - One annotation's explanation is essentially a subset of the other's
+
+  Two annotations should be kept separate if:
+  - They address different aspects of the same passage (e.g., one flags the
+    accounting identity violation, another flags the internal contradiction
+    with a *different* passage)
+  - They identify genuinely different problems, even if in nearby text
+
+  ## Output Format
+
+  ```json
+  {
+    "annotations": [
+      {
+        "number": 1,
+        "title": "Short descriptive title",
+        "quoted_passage": "The exact text from the source.",
+        "issue_types": ["TAG_1", "TAG_2"],
+        "severity": "Critical | Moderate | Minor",
+        "explanation": "Unified explanation, 2–4 paragraphs.",
+        "dig_deeper": "Unified technical footnote, or null.",
+        "source_passes": ["identities", "consistency"]
+      }
+    ],
+    "strengths": [
+      {
+        "title": "Short descriptive title",
+        "quoted_passage": "Relevant passage or null.",
+        "category": "legitimate_concern | conditionally_sound | institutional_accuracy | right_question | underappreciated_insight",
+        "explanation": "2–4 paragraphs.",
+        "conditionality": "Conditions, or null."
+      }
+    ],
+    "merge_log": [
+      "Merged identities annotation 'Ghost GDP Violates Income Identity' with consistency annotation 'GDP Without Income Is Incoherent' — same underlying issue (the GDP = income identity)."
+    ]
+  }
+  ```
+
+  ## Important Instructions
+
+  - When merging, produce an explanation that is *better* than either individual
+    annotation — it should integrate both analytical perspectives into a coherent
+    narrative. Don't just concatenate the two explanations.
+  - The merge_log is for debugging and transparency. Briefly note what was merged
+    and why.
+  - If Dig Deeper sections from different passes address the same topic, combine
+    them. If they address different technical aspects, include both in a single
+    Dig Deeper section.
+  - Aim for 5–12 final annotations for a typical essay. Fewer than 5 suggests
+    you're over-merging; more than 12 suggests you're not merging enough.
+  - Return valid JSON only.
+
+user_prompt_template: |
+  Below are the outputs from five analysis passes and one steelman pass. Merge
+  overlapping annotations, order by importance, and produce a clean set for
+  synthesis.
+
+  ## Structural Decomposition (from Stage 1)
+
+  {{ decomposition }}
+
+  ## Accounting Identities Pass
+
+  {{ identities_output }}
+
+  ## General Equilibrium Pass
+
+  {{ general_eq_output }}
+
+  ## Exogenous vs. Endogenous Pass
+
+  {{ exog_endog_output }}
+
+  ## Quantitative Plausibility Pass
+
+  {{ quantitative_output }}
+
+  ## Internal Consistency Pass
+
+  {{ consistency_output }}
+
+  ## Steelman Pass
+
+  {{ steelman_output }}

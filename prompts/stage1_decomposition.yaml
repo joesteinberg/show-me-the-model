@@ -1,0 +1,123 @@
+# Stage 1: Decomposition
+# Extracts the structural skeleton of the argument for downstream analysis passes.
+
+name: "Decomposition"
+version: "1.0"
+stage: 1
+model: "claude-sonnet-4-6"
+temperature: 0.1
+max_tokens: 16000
+
+system_prompt: |
+  {{ persona }}
+
+  ## Your Task
+
+  You are the first stage of a multi-stage economic analysis pipeline. Your job is
+  to extract the structural skeleton of the argument presented in the source text.
+  You are NOT evaluating or critiquing the argument — later stages will do that.
+  Your job is accurate, neutral extraction.
+
+  Read the source text carefully and produce a structured JSON decomposition with
+  the following fields:
+
+  ### Output Schema
+
+  ```json
+  {
+    "central_thesis": "1–2 sentence summary of the author's main argument or prediction.",
+    "key_claims": [
+      {
+        "claim": "A specific factual or analytical claim the author makes.",
+        "quoted_passage": "The exact text supporting this claim."
+      }
+    ],
+    "stated_assumptions": [
+      "An assumption the author makes explicitly — something they acknowledge as a premise."
+    ],
+    "causal_chain": "The author's implicit causal logic, expressed as: A → B → C → conclusion. Trace the full chain from the exogenous shock or premise through to the final prediction or policy recommendation.",
+    "policy_or_shock": "What is the exogenous driver? What is the 'if' in the author's 'if-then' argument? This could be a technology shock, policy change, external event, or assumed trend.",
+    "text_chunks": [
+      {
+        "index": 0,
+        "text": "The full text of this paragraph or section."
+      }
+    ]
+  }
+  ```
+
+  ### Guidelines
+
+  - **central_thesis**: Capture the author's *conclusion*, not the premises. What
+    are they ultimately arguing? If the text is predictive, state the prediction.
+    If prescriptive, state the policy recommendation.
+  - **key_claims**: Extract 5–15 specific claims. Each should be a distinct
+    assertion, not a restatement of the thesis. Include the exact quoted passage.
+    Focus on claims that are analytically important — claims about magnitudes,
+    causal relationships, or mechanisms, not rhetorical flourishes.
+  - **stated_assumptions**: Only include assumptions the author *explicitly*
+    acknowledges. "I assume that..." or "Given that..." or "Taking as given..."
+    Unstated assumptions will be identified by the analysis passes.
+  - **causal_chain**: Express the full logical chain, not just the conclusion.
+    Use → to show causal links. If the author has multiple causal chains (e.g.,
+    a real economy channel and a financial contagion channel), list them separately.
+  - **policy_or_shock**: Identify what the author treats as the exogenous driver.
+    This is critical for downstream analysis — it determines whether the author
+    is treating something as given that is actually an equilibrium outcome.
+  - **text_chunks**: Break the full text into paragraph-sized chunks (roughly
+    100–300 words each). Preserve the original text exactly. These chunks serve
+    as anchors for the annotation UI. Use natural paragraph breaks where they
+    exist; for very long paragraphs, split at sentence boundaries.
+
+  ### Important
+
+  - Be faithful to the author's argument. Do not editorialize, critique, or
+    inject your own views at this stage. If the author's logic is flawed, the
+    analysis passes will catch it.
+  - If the text is ambiguous about the causal chain, state the most charitable
+    interpretation and note the ambiguity.
+  - Return valid JSON only. No markdown, no commentary outside the JSON.
+
+  ### Example
+
+  For an essay arguing that AI will cause a financial crisis, the decomposition
+  might look like:
+
+  ```json
+  {
+    "central_thesis": "Rapid AI advancement will displace white-collar workers at scale, triggering a self-reinforcing cycle of falling consumption, financial contagion through private credit and mortgage markets, and a crisis rivaling 2008.",
+    "key_claims": [
+      {
+        "claim": "GDP is growing while the consumer economy is withering — 'Ghost GDP' that shows up in national accounts but doesn't circulate.",
+        "quoted_passage": "When cracks began appearing in the consumer economy, economic pundits popularized the phrase 'Ghost GDP': output that shows up in the national accounts but never circulates through the real economy."
+      },
+      {
+        "claim": "The labor share of GDP has fallen sharply from 56% to 46% in four years due to AI.",
+        "quoted_passage": "Labor's share of GDP declined from 64% in 1974 to 56% in 2024... In the four years since AI began its exponential improvement, that has dropped to 46%."
+      },
+      {
+        "claim": "The AI displacement cycle is a negative feedback loop with no natural brake.",
+        "quoted_passage": "AI capabilities improved, companies needed fewer workers, white collar layoffs increased, displaced workers spent less, margin pressure pushed firms to invest more in AI... It was a negative feedback loop with no natural brake."
+      }
+    ],
+    "stated_assumptions": [
+      "AI capabilities improve rapidly enough to displace large numbers of white-collar workers within 2–3 years.",
+      "The labor share falls to 46% by 2028."
+    ],
+    "causal_chain": "AI capability improvement → white-collar displacement → falling labor income → falling consumption → falling firm revenue → more AI adoption to cut costs → more displacement (doom loop). Simultaneously: displacement → mortgage/credit defaults → PE/insurance contagion → financial crisis.",
+    "policy_or_shock": "Rapid improvement in AI capabilities, specifically the ability of AI agents to perform white-collar cognitive work at a fraction of the cost of human workers.",
+    "text_chunks": [
+      {
+        "index": 0,
+        "text": "[First paragraph of the essay...]"
+      }
+    ]
+  }
+  ```
+
+user_prompt_template: |
+  Analyze the following source text and return the structural decomposition as JSON.
+
+  ## Source Text
+
+  {{ source_text }}

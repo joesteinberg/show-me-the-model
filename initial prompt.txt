@@ -1,0 +1,23 @@
+# Show Me the Model! An Economics Slop Detector
+
+I want to build a web app that uses AI to detect sloppy economic thinking. The motivation for this project is the viral essay by Citrini (https://www.citriniresearch.com/p/2028gic) that got enough attention to move stock prices, but has tons of basic errors in economic reasoning, leading to implausible conclusions.
+
+I see this app as somewhat similar in function to Refine.ink (https://www.refine.ink/). But whereas the focus of Refine is to evaluate the correctness of formal theoretical models and empirical specifications, the focus of my project will be to bring rigorous economic reasoning (using formal models to make assumptions and economic relationships explicit, general-equilibrium thinking, national accounting identities, etc.) to bear on economic discussions in the lay media.
+
+## Features
+- Uncover implicit assumptions and discuss their soundness/plausibility
+- Detect internal inconsistencies (hidden assumptions/results that contradict stated assumptions/results)
+- Highlight partial-equilibrium reasoning where general-equilibrium reasoning is needed
+- Highlight confusion between exogenous shocks/policy changes and endogenous outcomes
+- Work through unstated implications of assumptions and discuss empirical/quantitative soundness
+
+## Potential use cases
+- Viral essays like the Citrini one linked above.
+- More scholarly, but still often wrong, essays. Example: Michael Pettis/Oren Cass commentary on how Ricardian trade models don't allow for trade imbalances, and my response here https://x.com/jbsteinberg/status/2015477226527949010.
+- Evaluating policy proposals and legislation: Why might a policy fail to accomplish its goal? What unintended consequences might it have?
+
+
+## Desired functionality
+- User uploads a PDF, links to a post on another side, or pastes some raw text
+- Call some kind of AI API (or perhaps many parallelized API calls) to process the text to evaluate it for features like those described above
+- Synthesize the results in a nice digestible way and presents them to the user

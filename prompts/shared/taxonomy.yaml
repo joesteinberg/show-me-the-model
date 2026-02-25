@@ -1,0 +1,96 @@
+# Controlled vocabulary of issue types for tagging annotations.
+# Each analysis pass uses a relevant subset of these tags.
+
+issue_types:
+  IDENTITY_VIOLATION:
+    name: "Identity Violation"
+    description: >
+      Violates a national accounting identity or budget constraint. GDP = C + I + G + NX
+      must hold; stock-flow relationships must be respected; balance of payments must balance.
+    example: "GDP rises while consumption falls — what's the offset?"
+
+  PARTIAL_EQUILIBRIUM:
+    name: "Partial Equilibrium Reasoning"
+    description: >
+      Treats as fixed something that would adjust in general equilibrium. Analyzes one
+      market or sector while holding everything else constant, when the shock is large
+      enough that everything else would change.
+    example: "Assumes wages don't respond to a massive labor demand shift"
+
+  EXOG_ENDO_CONFUSION:
+    name: "Exogenous/Endogenous Confusion"
+    description: >
+      Treats an endogenous outcome as if it were an exogenous assumption. Assumes a result
+      (e.g., 'the labor share will fall') rather than deriving it from primitives (e.g., a
+      change in the elasticity of substitution).
+    example: "'The labor share will fall' stated as premise rather than derived"
+
+  MISSING_MECHANISM:
+    name: "Missing Mechanism"
+    description: >
+      Asserts a causal link without specifying the mechanism through which it operates.
+      The reader is told that A causes B but not *how* or *why*.
+    example: "'AI → lower labor share' without specifying through what channel"
+
+  COMPOSITION_FALLACY:
+    name: "Composition Fallacy"
+    description: >
+      What's true for one agent, firm, or sector isn't necessarily true in aggregate.
+      Scales micro-level logic to the macro level without accounting for aggregation
+      effects, feedback loops, or offsetting responses from other agents.
+    example: "Assumes firm-level cost logic scales to the macro without aggregation effects"
+
+  QUANTITATIVE_IMPLAUSIBILITY:
+    name: "Quantitative Implausibility"
+    description: >
+      Implied magnitudes are unreasonable given known empirical estimates. The numbers
+      don't pass a smell test, or the implied elasticities/multipliers are far outside
+      the range of credible estimates.
+    example: "Growth effects that imply implausible elasticities"
+
+  INTERNAL_CONTRADICTION:
+    name: "Internal Contradiction"
+    description: >
+      The argument's own assumptions contradict its conclusions. The logic, followed
+      to its end, undermines the very point the author is making.
+    example: "Assumes both lower consumption AND higher GDP without identifying the wedge"
+
+  MISSING_AGENT:
+    name: "Missing Agent"
+    description: >
+      Ignores a key economic actor whose response would matter for the conclusion.
+      The government, foreign sector, financial intermediaries, or other agents are
+      absent from an analysis where their behavior would change the outcome.
+    example: "Ignores government budget constraint or foreign sector response"
+
+  CETERIS_NON_PARIBUS:
+    name: "Ceteris Non Paribus"
+    description: >
+      Holds 'other things equal' when they wouldn't be. Freezes prices, quantities,
+      or behavioral responses that would adjust in response to the shock being analyzed.
+    example: "Assumes no price adjustment in a market experiencing a large supply shift"
+
+  QUANTITATIVE_COMPOSSIBILITY:
+    name: "Quantitative Compossibility Failure"
+    description: >
+      Individual claims are each plausible in isolation, but the magnitudes required to
+      make them simultaneously true are implausible. The arithmetic doesn't add up when
+      you put all the claims together.
+    example: "GDP grows while consumption (70% of GDP) collapses — requires investment to roughly double"
+
+  SUTVA_VIOLATION:
+    name: "SUTVA Violation"
+    description: >
+      Treats a shock as uniformly negative without considering that general-equilibrium
+      price adjustments can benefit other sectors or agents. Named after the 'stable unit
+      treatment value assumption' in causal inference — the idea that one agent's treatment
+      doesn't affect another's outcomes.
+    example: "AI displaces white-collar workers, but cheaper labor benefits other sectors"
+
+  LUCAS_CRITIQUE:
+    name: "Lucas Critique"
+    description: >
+      Treats policy parameters, behavioral relationships, or institutional rules as fixed
+      when they would change in response to the shock. Named after Robert Lucas's insight
+      that agents and policymakers adapt their behavior to new conditions.
+    example: "Assumes tax revenue collapses without considering governments would adjust tax policy"
