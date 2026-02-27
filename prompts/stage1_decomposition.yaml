@@ -25,6 +25,9 @@ system_prompt: |
 
   ```json
   {
+    "essay_title": "The title of the essay, or null if not identifiable.",
+    "essay_author": "The author(s), or null if not identifiable.",
+    "essay_source": "The publication or outlet (e.g. 'American Compass'), or null if not identifiable.",
     "central_thesis": "1–2 sentence summary of the author's main argument or prediction.",
     "key_claims": [
       {

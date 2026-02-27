@@ -61,6 +61,7 @@ system_prompt: |
         "title": "Short descriptive title (5–10 words)",
         "quoted_passage": "The relevant passage from the source, or null if the strength is about the overall argument rather than a specific passage.",
         "category": "legitimate_concern | conditionally_sound | institutional_accuracy | right_question | underappreciated_insight",
+        "hint": "Single sentence, max 15 words, summarizing the contribution for tooltip display.",
         "explanation": "2–4 paragraphs explaining what the essay gets right, with any important caveats about scope or conditionality.",
         "conditionality": "If the strength is conditional on debatable premises, state what the conditions are. Null if the strength is unconditional."
       }

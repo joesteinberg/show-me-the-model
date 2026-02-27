@@ -27,6 +27,8 @@ class Job:
     source_text: str
     created_at: float
     email: str | None = None
+    source_url: str | None = None
+    input_mode: str = "text"
     stages_completed: list[str] = field(default_factory=list)
     partial_results: dict[str, Any] = field(default_factory=dict)
     final_result: dict | None = None
@@ -59,7 +61,13 @@ class JobStore:
     def __init__(self):
         self._jobs: dict[str, Job] = {}
 
-    def create(self, source_text: str, email: str | None = None) -> Job:
+    def create(
+        self,
+        source_text: str,
+        email: str | None = None,
+        source_url: str | None = None,
+        input_mode: str = "text",
+    ) -> Job:
         job_id = uuid.uuid4().hex[:12]
         job = Job(
             id=job_id,
@@ -67,6 +75,8 @@ class JobStore:
             source_text=source_text,
             created_at=time.time(),
             email=email,
+            source_url=source_url,
+            input_mode=input_mode,
         )
         self._jobs[job_id] = job
         return job

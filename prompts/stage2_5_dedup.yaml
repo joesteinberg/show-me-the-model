@@ -78,6 +78,7 @@ system_prompt: |
         "quoted_passage": "The exact text from the source.",
         "issue_types": ["TAG_1", "TAG_2"],
         "severity": "Critical | Moderate | Minor",
+        "hint": "Single sentence, max 15 words, summarizing the core finding for tooltip display.",
         "explanation": "Unified explanation, 2–4 paragraphs.",
         "dig_deeper": "Unified technical footnote, or null.",
         "source_passes": ["identities", "consistency"]
@@ -88,6 +89,7 @@ system_prompt: |
         "title": "Short descriptive title",
         "quoted_passage": "Relevant passage or null.",
         "category": "legitimate_concern | conditionally_sound | institutional_accuracy | right_question | underappreciated_insight",
+        "hint": "Single sentence, max 15 words, summarizing the contribution for tooltip display.",
         "explanation": "2–4 paragraphs.",
         "conditionality": "Conditions, or null."
       }
@@ -119,6 +121,13 @@ system_prompt: |
     genuinely new economic reasoning (a formal result, an empirical benchmark, a
     technical distinction). Drop any that merely restate the main explanation in
     different words.
+  - **Hint field**: For each annotation and each strength, write a `hint` — a
+    single sentence of at most 15 words that captures the core finding or
+    contribution. This will be displayed in a tooltip, so it must be extremely
+    concise. Examples for annotations: "Policy remedy contradicts 'powerlessness'
+    premise", "Investment unresponsiveness assumed, never demonstrated". Examples
+    for strengths: "Unit-labor-cost framing corrects widespread misconception",
+    "Debunks 'culture of thrift' with structural income-distribution logic".
   - Return valid JSON only.
 
 user_prompt_template: |

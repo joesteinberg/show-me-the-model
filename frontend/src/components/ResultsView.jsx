@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import OverviewDashboard from "./results/OverviewDashboard";
+import SummaryDashboard from "./results/SummaryDashboard";
 import SectionHeader from "./results/SectionHeader";
 import AssumptionsTable from "./results/AssumptionsTable";
 import ContradictionCard from "./results/ContradictionCard";
@@ -30,7 +30,7 @@ function Prose({ text }) {
 }
 
 export default function ResultsView({ result, onReset }) {
-  const { synthesis, merged_annotations, decomposition } = result;
+  const { synthesis, merged_annotations, decomposition, metadata } = result;
   const [activeSection, setActiveSection] = useState("overview");
 
   const annotations = merged_annotations?.annotations || [];
@@ -113,19 +113,44 @@ export default function ResultsView({ result, onReset }) {
             {/* Article title */}
             <div className="mb-5">
               <h1 className="text-[28px] font-bold text-slate-900 font-display tracking-tight leading-tight m-0">
-                Analysis Results
+                {metadata?.essay_title
+                  ? <>Analysis: &ldquo;{metadata.essay_title}&rdquo;</>
+                  : "Analysis Results"}
               </h1>
+              {metadata?.essay_author && (
+                <p className="mt-1.5 mb-0 text-sm text-slate-600 font-body">
+                  by {metadata.essay_author}
+                  {metadata.essay_source && <> · {metadata.essay_source}</>}
+                </p>
+              )}
+              <p className="mt-1 mb-0 text-xs text-slate-400 font-body">
+                {metadata?.source_url ? (
+                  <a
+                    href={metadata.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-600 underline"
+                  >
+                    View original ↗
+                  </a>
+                ) : metadata?.input_mode === "pdf" ? (
+                  "Source: user-supplied PDF"
+                ) : metadata?.input_mode === "text" ? (
+                  "Source: user-supplied text"
+                ) : null}
+              </p>
             </div>
 
-            <OverviewDashboard
-              annotations={merged_annotations}
-              strengths={synthesis}
+            <SummaryDashboard
+              annotations={annotations}
+              assumptions={assumptions}
+              strengths={strengths}
               contradictions={contradictionsArray}
             />
 
             {/* Bottom Line */}
             {synthesis?.bottom_line && (
-              <div className="bg-slate-900 rounded-xl px-6 py-5 relative overflow-hidden">
+              <div className="mt-4 bg-slate-900 rounded-xl px-6 py-5 relative overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-[5px] bg-gradient-to-b from-blue-500 to-violet-500" />
                 <div className="text-[11px] font-bold text-blue-400 uppercase tracking-[1.5px] mb-2.5 font-body">
                   Bottom Line

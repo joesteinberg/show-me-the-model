@@ -91,6 +91,15 @@ async def _run_job(job_id: str, api_key: str, base_url: str):
         result = await run_pipeline(
             client, job.source_text, on_stage_complete=on_stage_complete
         )
+        # Inject metadata from decomposition + job context
+        decomp = result.get("decomposition", {})
+        result["metadata"] = {
+            "essay_title": decomp.get("essay_title"),
+            "essay_author": decomp.get("essay_author"),
+            "essay_source": decomp.get("essay_source"),
+            "source_url": job.source_url,
+            "input_mode": job.input_mode,
+        }
         job.final_result = result
         job.status = JobStatus.COMPLETED
         job.queue.put_nowait(("done", {"job_id": job.id, "result": result}))
@@ -175,16 +184,27 @@ async def analyze(
     try:
         if text:
             source_text = validate_text(text)
+            input_mode = "text"
+            source_url = None
         elif url:
             source_text = await extract_from_url(url)
+            input_mode = "url"
+            source_url = url
         else:
             pdf_bytes = await file.read()
             source_text = await extract_from_pdf(pdf_bytes)
+            input_mode = "pdf"
+            source_url = None
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
     # Create job and spawn background task
-    job = store.create(source_text=source_text, email=email)
+    job = store.create(
+        source_text=source_text,
+        email=email,
+        source_url=source_url,
+        input_mode=input_mode,
+    )
     base_url = str(request.base_url).rstrip("/")
     asyncio.create_task(_run_job(job.id, api_key, base_url))
 
