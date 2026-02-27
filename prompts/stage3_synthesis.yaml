@@ -45,11 +45,19 @@ system_prompt: |
         "number": 1,
         "assumption": "A critical assumption the argument depends on.",
         "stated_or_unstated": "Stated | Unstated",
+        "plausibility": "Weak | Mixed | Contested | Strong",
+        "critical": true,
         "assessment": "1–2 sentences on whether it's plausible and why. Reference specific annotation numbers where relevant."
       }
     ],
 
-    "internal_consistency": "3–6 paragraphs identifying the major internal contradictions or tensions in the argument. This is where you synthesize across annotations — individual annotations flag specific passages, but here you show how the contradictions connect and compound. Name each contradiction (e.g., 'The GDP–consumption paradox') and explain it in terms a lay reader can follow. Reference annotation numbers.",
+    "internal_consistency": [
+      {
+        "name": "A short descriptive name for the contradiction (e.g., 'The Powerlessness–Agency Paradox')",
+        "annotation_refs": [1, 3],
+        "summary": "2–4 sentences explaining the contradiction in terms a lay reader can follow. Show the logical chain: the essay argues X, but X implies Y (Annotation N), which contradicts Z."
+      }
+    ],
 
     "what_the_essay_gets_right": "2–4 paragraphs acknowledging the essay's genuine strengths, drawing on the steelman analysis. Be specific and genuine — this section builds the tool's credibility. Note conditionality where relevant.",
 
@@ -71,14 +79,24 @@ system_prompt: |
     say "Implausible" — say *why* (e.g., "Contradicted by progressive taxation
     and the fact that total income rises if GDP rises — see Annotation 8").
   - Order from most to least important to the argument.
+  - **plausibility**: Rate each assumption as "Weak", "Mixed", "Contested", or "Strong".
+    "Weak" = implausible on the evidence. "Mixed" = some support but significant
+    counterarguments. "Contested" = actively debated in the literature with no
+    consensus. "Strong" = well-supported.
+  - **critical**: Set to `true` if this assumption is load-bearing — i.e., if it
+    fails, a major part of the argument collapses. Typically 3–5 assumptions are
+    critical.
 
   ### Internal Consistency Check
   - This is where you earn your keep. Individual annotations flag specific issues;
     here you show how they *connect*. The GDP–consumption paradox compounds the
     saving–asset price paradox, which compounds the disintermediation paradox.
-  - Name each contradiction with a descriptive label.
-  - Show the reader the logical chain: "The essay argues X. But X implies Y
-    (Annotation 3). And Y contradicts Z, which the essay also argues (Annotation 7)."
+  - Return an **array of named contradiction objects**, each with:
+    - `name`: a descriptive label (e.g., "The Powerlessness–Agency Paradox")
+    - `annotation_refs`: array of annotation numbers this contradiction relates to
+    - `summary`: 2–4 sentences explaining the contradiction for a lay reader
+  - Show the logical chain: "The essay argues X. But X implies Y (Annotation 3).
+    And Y contradicts Z, which the essay also argues (Annotation 7)."
 
   ### What the Essay Gets Right
   - Draw on the steelman analysis. Be genuine.
@@ -105,8 +123,9 @@ system_prompt: |
   ## Important Instructions
 
   - Write in accessible prose, not bullet points (except for the key_assumptions
-    table). The internal_consistency, what_the_essay_gets_right, rigorous_alternative,
-    and bottom_line sections should read as connected paragraphs.
+    table and internal_consistency array). The what_the_essay_gets_right,
+    rigorous_alternative, and bottom_line sections should read as connected paragraphs.
+    Each internal_consistency item's summary should be self-contained prose.
   - Reference annotation numbers (e.g., "see Annotation 3") to connect the
     synthesis to the passage-level analysis. The reader will be able to click
     through to the specific annotation.

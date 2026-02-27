@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+from pathlib import Path
 
 from anthropic import AsyncAnthropic
 from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File, Form
@@ -93,6 +94,13 @@ async def _run_job(job_id: str, api_key: str, base_url: str):
         job.final_result = result
         job.status = JobStatus.COMPLETED
         job.queue.put_nowait(("done", {"job_id": job.id, "result": result}))
+
+        # Save result to disk for offline iteration
+        results_dir = Path(__file__).resolve().parent.parent / "results"
+        results_dir.mkdir(exist_ok=True)
+        result_path = results_dir / f"{job.id}.json"
+        result_path.write_text(json.dumps(result, indent=2))
+        logger.info("Saved result to %s", result_path)
 
         if job.email:
             await send_results_email(job.email, job.id, base_url)

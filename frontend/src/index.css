@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@theme {
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+
+  --color-severity-critical-bg: #FEF2F2;
+  --color-severity-critical-border: #DC2626;
+  --color-severity-critical-text: #991B1B;
+  --color-severity-moderate-bg: #FFFBEB;
+  --color-severity-moderate-border: #D97706;
+  --color-severity-moderate-text: #92400E;
+  --color-severity-minor-bg: #F0FDF4;
+  --color-severity-minor-border: #16A34A;
+  --color-severity-minor-text: #166534;
+}

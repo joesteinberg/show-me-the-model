@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 eval/outputs/
+/results/
+frontend/public/sample-result.json
 .claude/
 *.egg-info/
 .venv/
