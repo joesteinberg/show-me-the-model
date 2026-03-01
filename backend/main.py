@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
@@ -67,7 +68,7 @@ class AnalyzeRequest(BaseModel):
 
 # --- Pipeline background task ---
 
-async def _run_job(job_id: str, api_key: str, base_url: str):
+async def _run_job(job_id: str, api_key: str, base_url: str, provider: str):
     """Run the pipeline in the background, pushing events to the job's queue."""
     job = store.get(job_id)
     if not job:
@@ -87,13 +88,20 @@ async def _run_job(job_id: str, api_key: str, base_url: str):
         job.queue.put_nowait(("stage_complete", event))
 
     try:
-        client = AsyncAnthropic(api_key=api_key)
+        if provider == "openai":
+            client = AsyncOpenAI(api_key=api_key)
+        else:
+            client = AsyncAnthropic(api_key=api_key)
         result = await run_pipeline(
-            client, job.source_text, on_stage_complete=on_stage_complete
+            client,
+            job.source_text,
+            provider=provider,
+            on_stage_complete=on_stage_complete,
         )
         # Inject metadata from decomposition + job context
         decomp = result.get("decomposition", {})
         result["metadata"] = {
+            "workflow": provider,
             "essay_title": decomp.get("essay_title"),
             "essay_author": decomp.get("essay_author"),
             "essay_source": decomp.get("essay_source"),
@@ -107,7 +115,7 @@ async def _run_job(job_id: str, api_key: str, base_url: str):
         # Save result to disk for offline iteration
         results_dir = Path(__file__).resolve().parent.parent / "results"
         results_dir.mkdir(exist_ok=True)
-        result_path = results_dir / f"{job.id}.json"
+        result_path = results_dir / f"{job.id}-{provider}.json"
         result_path.write_text(json.dumps(result, indent=2))
         logger.info("Saved result to %s", result_path)
 
@@ -150,9 +158,13 @@ async def analyze(
     email: str | None = Form(None),
     file: UploadFile | None = File(None),
     x_api_key: str | None = Header(None),
+    x_provider: str | None = Header(None),
 ):
     """Submit text for analysis. Accepts JSON body or multipart form (for PDF upload)."""
     api_key = x_api_key
+    provider = (x_provider or "anthropic").strip().lower()
+    if provider not in {"anthropic", "openai"}:
+        raise HTTPException(status_code=400, detail="X-Provider must be one of: anthropic, openai")
 
     # If no form fields were provided, try parsing as JSON body
     if text is None and url is None and file is None:
@@ -206,7 +218,7 @@ async def analyze(
         input_mode=input_mode,
     )
     base_url = str(request.base_url).rstrip("/")
-    asyncio.create_task(_run_job(job.id, api_key, base_url))
+    asyncio.create_task(_run_job(job.id, api_key, base_url, provider))
 
     return {
         "job_id": job.id,

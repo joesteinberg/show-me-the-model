@@ -2,8 +2,8 @@
  * API layer for communicating with the backend.
  */
 
-export async function submitJob({ text, url, file, email, apiKey }) {
-  const headers = { "X-Api-Key": apiKey };
+export async function submitJob({ text, url, file, email, apiKey, provider }) {
+  const headers = { "X-Api-Key": apiKey, "X-Provider": provider || "anthropic" };
 
   let body;
   if (file) {

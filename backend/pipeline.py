@@ -12,6 +12,7 @@ import json
 import logging
 from pathlib import Path
 from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 from backend.prompt_loader import load_and_render
 
@@ -81,6 +82,100 @@ async def _call_claude(
             else:
                 # Last attempt failed — return as-is, let caller handle it
                 return text
+
+
+def _map_model_for_openai(model: str) -> str:
+    """Map Anthropic prompt model names to OpenAI equivalents."""
+    model_map = {
+        "claude-sonnet-4-6": "gpt-5-mini",
+        "claude-opus-4-6": "gpt-5.2",
+    }
+    return model_map.get(model, model)
+
+
+async def _call_openai(
+    client: AsyncOpenAI,
+    model: str,
+    system_prompt: str,
+    user_prompt: str,
+    temperature: float,
+    max_tokens: int,
+    retries: int = 2,
+) -> str:
+    """Make a single OpenAI Responses API call and return text response."""
+    model = _map_model_for_openai(model)
+    input_messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    for attempt in range(retries + 1):
+        response = await client.responses.create(
+            model=model,
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            input=input_messages,
+        )
+        text = response.output_text
+
+        try:
+            _extract_json(text)
+            return text
+        except (json.JSONDecodeError, ValueError):
+            if attempt < retries:
+                logger.warning(
+                    "OpenAI JSON parse failed (attempt %s/%s), retrying...",
+                    attempt + 1,
+                    retries + 1,
+                )
+                input_messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                    {"role": "assistant", "content": text},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Your response contained invalid JSON. Please return "
+                            "the complete response again as valid JSON. Ensure all "
+                            "strings are properly escaped. Return only JSON."
+                        ),
+                    },
+                ]
+            else:
+                return text
+
+
+async def _call_model(
+    client,
+    provider: str,
+    model: str,
+    system_prompt: str,
+    user_prompt: str,
+    temperature: float,
+    max_tokens: int,
+    retries: int = 2,
+) -> str:
+    """Route model calls to Claude or OpenAI."""
+    if provider == "openai":
+        return await _call_openai(
+            client,
+            model,
+            system_prompt,
+            user_prompt,
+            temperature,
+            max_tokens,
+            retries,
+        )
+
+    return await _call_claude(
+        client,
+        model,
+        system_prompt,
+        user_prompt,
+        temperature,
+        max_tokens,
+        retries,
+    )
 
 
 # Directory for saving raw responses for debugging
@@ -207,12 +302,13 @@ def _repair_truncated_json(text: str) -> str:
     return result
 
 
-async def run_stage1(client: AsyncAnthropic, source_text: str) -> dict:
+async def run_stage1(client, source_text: str, provider: str = "anthropic") -> dict:
     """Stage 1: Decompose the source text into structural components."""
     logger.info("Stage 1: Decomposition")
     prompt = load_and_render("stage1_decomposition.yaml", source_text=source_text)
-    raw = await _call_claude(
+    raw = await _call_model(
         client,
+        provider,
         prompt["model"],
         prompt["system_prompt"],
         prompt["user_prompt"],
@@ -223,7 +319,8 @@ async def run_stage1(client: AsyncAnthropic, source_text: str) -> dict:
 
 
 async def _run_single_pass(
-    client: AsyncAnthropic,
+    client,
+    provider: str,
     yaml_file: str,
     pass_name: str,
     source_text: str,
@@ -236,8 +333,9 @@ async def _run_single_pass(
         source_text=source_text,
         decomposition=decomposition_json,
     )
-    raw = await _call_claude(
+    raw = await _call_model(
         client,
+        provider,
         prompt["model"],
         prompt["system_prompt"],
         prompt["user_prompt"],
@@ -248,9 +346,10 @@ async def _run_single_pass(
 
 
 async def run_stage2(
-    client: AsyncAnthropic,
+    client,
     source_text: str,
     decomposition: dict,
+    provider: str = "anthropic",
     batch_size: int = 2,
     batch_delay: float = 5.0,
 ) -> dict[str, dict]:
@@ -271,7 +370,7 @@ async def run_stage2(
             logger.info(f"  Rate limit pause ({batch_delay}s)...")
             await asyncio.sleep(batch_delay)
         tasks = [
-            _run_single_pass(client, yaml_file, name, source_text, decomposition_json)
+            _run_single_pass(client, provider, yaml_file, name, source_text, decomposition_json)
             for yaml_file, name in batch
         ]
         batch_results = await asyncio.gather(*tasks)
@@ -281,9 +380,10 @@ async def run_stage2(
 
 
 async def run_stage2_5(
-    client: AsyncAnthropic,
+    client,
     decomposition: dict,
     stage2_results: dict[str, dict],
+    provider: str = "anthropic",
 ) -> dict:
     """Stage 2.5: Deduplicate and merge overlapping annotations."""
     logger.info("Stage 2.5: Dedup & merge")
@@ -299,8 +399,9 @@ async def run_stage2_5(
         consistency_output=json.dumps(stage2_results["consistency"], indent=2),
         steelman_output=json.dumps(stage2_results["steelman"], indent=2),
     )
-    raw = await _call_claude(
+    raw = await _call_model(
         client,
+        provider,
         prompt["model"],
         prompt["system_prompt"],
         prompt["user_prompt"],
@@ -311,10 +412,11 @@ async def run_stage2_5(
 
 
 async def run_stage3(
-    client: AsyncAnthropic,
+    client,
     source_text: str,
     decomposition: dict,
     merged_annotations: dict,
+    provider: str = "anthropic",
 ) -> dict:
     """Stage 3: Synthesis report (Opus)."""
     logger.info("Stage 3: Synthesis")
@@ -324,8 +426,9 @@ async def run_stage3(
         decomposition=json.dumps(decomposition, indent=2),
         merged_annotations=json.dumps(merged_annotations, indent=2),
     )
-    raw = await _call_claude(
+    raw = await _call_model(
         client,
+        provider,
         prompt["model"],
         prompt["system_prompt"],
         prompt["user_prompt"],
@@ -336,8 +439,9 @@ async def run_stage3(
 
 
 async def run_pipeline(
-    client: AsyncAnthropic,
+    client,
     source_text: str,
+    provider: str = "anthropic",
     on_stage_complete=None,
 ) -> dict:
     """
@@ -352,26 +456,43 @@ async def run_pipeline(
         dict with keys: decomposition, stage2_results, merged_annotations, synthesis
     """
     # Stage 1
-    decomposition = await run_stage1(client, source_text)
+    decomposition = await run_stage1(client, source_text, provider=provider)
     if on_stage_complete:
         on_stage_complete("decomposition", decomposition)
 
     # Stage 2 (parallel)
-    stage2_results = await run_stage2(client, source_text, decomposition)
+    stage2_results = await run_stage2(
+        client,
+        source_text,
+        decomposition,
+        provider=provider,
+    )
     if on_stage_complete:
         on_stage_complete("stage2", stage2_results)
 
     # Stage 2.5
-    merged = await run_stage2_5(client, decomposition, stage2_results)
+    merged = await run_stage2_5(
+        client,
+        decomposition,
+        stage2_results,
+        provider=provider,
+    )
     if on_stage_complete:
         on_stage_complete("dedup", merged)
 
     # Stage 3
-    synthesis = await run_stage3(client, source_text, decomposition, merged)
+    synthesis = await run_stage3(
+        client,
+        source_text,
+        decomposition,
+        merged,
+        provider=provider,
+    )
     if on_stage_complete:
         on_stage_complete("synthesis", synthesis)
 
     return {
+        "workflow": provider,
         "decomposition": decomposition,
         "stage2_results": stage2_results,
         "merged_annotations": merged,

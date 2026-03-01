@@ -6,18 +6,33 @@ const TABS = [
   { key: "file", label: "Upload PDF" },
 ];
 
+const PROVIDERS = [
+  { key: "anthropic", label: "Claude (Sonnet + Opus)", placeholder: "sk-ant-..." },
+  { key: "openai", label: "OpenAI (GPT-5 mini + GPT-5.2)", placeholder: "sk-..." },
+];
+
 export default function InputForm({ onSubmit }) {
   const [tab, setTab] = useState("text");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("smtm_api_key") || "");
+  const [provider, setProvider] = useState(() => localStorage.getItem("smtm_provider") || "anthropic");
+  const [apiKey, setApiKey] = useState(() =>
+    localStorage.getItem(`smtm_api_key_${localStorage.getItem("smtm_provider") || "anthropic"}`) || ""
+  );
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (apiKey) localStorage.setItem("smtm_api_key", apiKey);
-  }, [apiKey]);
+    if (apiKey) {
+      localStorage.setItem(`smtm_api_key_${provider}`, apiKey);
+    }
+  }, [apiKey, provider]);
+
+  useEffect(() => {
+    localStorage.setItem("smtm_provider", provider);
+    setApiKey(localStorage.getItem(`smtm_api_key_${provider}`) || "");
+  }, [provider]);
 
   const hasInput =
     (tab === "text" && text.trim().length > 0) ||
@@ -25,6 +40,7 @@ export default function InputForm({ onSubmit }) {
     (tab === "file" && file !== null);
 
   const canSubmit = hasInput && apiKey.trim().length > 0 && !submitting;
+  const selectedProvider = PROVIDERS.find((p) => p.key === provider) || PROVIDERS[0];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +52,7 @@ export default function InputForm({ onSubmit }) {
         file: tab === "file" ? file : undefined,
         email: email || undefined,
         apiKey,
+        provider,
       });
     } finally {
       setSubmitting(false);
@@ -45,18 +62,31 @@ export default function InputForm({ onSubmit }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Workflow</label>
+        <select
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          {PROVIDERS.map((p) => (
+            <option key={p.key} value={p.key}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Anthropic API Key
+          {provider === "openai" ? "OpenAI API Key" : "Anthropic API Key"}
         </label>
         <input
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-ant-..."
+          placeholder={selectedProvider.placeholder}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
         <p className="mt-1 text-xs text-gray-400">
-          Stored in your browser only. Never sent to our servers.
+          Stored in your browser only. Sent only to the selected model provider through this backend.
         </p>
       </div>
 
