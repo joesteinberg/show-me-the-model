@@ -31,6 +31,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -103,14 +104,21 @@ async def run_eval(
     name: str,
     max_stage: float = 3,
     resume: bool = False,
+    provider: str = "anthropic",
 ):
     """Run the pipeline on a source text and save all outputs."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        logger.error("ANTHROPIC_API_KEY not set. Copy .env.example to .env and add your key.")
-        sys.exit(1)
-
-    client = AsyncAnthropic(api_key=api_key)
+    if provider == "openai":
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            logger.error("OPENAI_API_KEY not set. Add it to your .env file.")
+            sys.exit(1)
+        client = AsyncOpenAI(api_key=api_key)
+    else:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            logger.error("ANTHROPIC_API_KEY not set. Copy .env.example to .env and add your key.")
+            sys.exit(1)
+        client = AsyncAnthropic(api_key=api_key)
     source_text = load_source_text(name)
 
     # Resume from previous run or create new
@@ -122,10 +130,11 @@ async def run_eval(
     else:
         run_dir = get_run_dir(name)
 
-    logger.info(f"=== Eval: {name} ===")
+    logger.info(f"=== Eval: {name} ({provider}) ===")
     logger.info(f"Output dir: {run_dir}")
     logger.info(f"Source text: {len(source_text.split())} words")
     logger.info(f"Max stage: {max_stage}")
+    logger.info(f"Provider: {provider}")
 
     total_start = time.time()
 
@@ -136,7 +145,7 @@ async def run_eval(
     else:
         start = time.time()
         logger.info("Stage 1: Decomposition...")
-        decomposition = await run_stage1(client, source_text)
+        decomposition = await run_stage1(client, source_text, provider=provider)
         elapsed = time.time() - start
         logger.info(f"Stage 1: done ({elapsed:.1f}s)")
         save_output(run_dir, "stage1", decomposition)
@@ -152,7 +161,7 @@ async def run_eval(
     else:
         start = time.time()
         logger.info("Stage 2: Parallel analysis passes...")
-        stage2_results = await run_stage2(client, source_text, decomposition)
+        stage2_results = await run_stage2(client, source_text, decomposition, provider=provider)
         elapsed = time.time() - start
         logger.info(f"Stage 2: done ({elapsed:.1f}s) — {len(stage2_results)} passes")
         save_output(run_dir, "stage2", stage2_results)
@@ -168,7 +177,7 @@ async def run_eval(
     else:
         start = time.time()
         logger.info("Stage 2.5: Dedup & merge...")
-        merged = await run_stage2_5(client, decomposition, stage2_results)
+        merged = await run_stage2_5(client, decomposition, stage2_results, provider=provider)
         elapsed = time.time() - start
         logger.info(f"Stage 2.5: done ({elapsed:.1f}s)")
         save_output(run_dir, "stage2_5", merged)
@@ -180,7 +189,7 @@ async def run_eval(
     # Stage 3
     start = time.time()
     logger.info("Stage 3: Synthesis (Opus)...")
-    synthesis = await run_stage3(client, source_text, decomposition, merged)
+    synthesis = await run_stage3(client, source_text, decomposition, merged, provider=provider)
     elapsed = time.time() - start
     logger.info(f"Stage 3: done ({elapsed:.1f}s)")
     save_output(run_dir, "stage3", synthesis)
@@ -210,13 +219,19 @@ def main():
         action="store_true",
         help="Resume from the most recent partial run",
     )
+    parser.add_argument(
+        "--provider",
+        choices=["anthropic", "openai"],
+        default="anthropic",
+        help="LLM provider to use (default: anthropic)",
+    )
     args = parser.parse_args()
 
     sources = [args.source] if args.source else SOURCES
 
     async def run_all():
         for name in sources:
-            await run_eval(name, max_stage=args.stage, resume=args.resume)
+            await run_eval(name, max_stage=args.stage, resume=args.resume, provider=args.provider)
 
     asyncio.run(run_all())
 

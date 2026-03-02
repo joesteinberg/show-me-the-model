@@ -93,6 +93,10 @@ def _map_model_for_openai(model: str) -> str:
     return model_map.get(model, model)
 
 
+# Models that only accept temperature=1 (the default)
+_OPENAI_NO_TEMPERATURE = {"gpt-5-mini"}
+
+
 async def _call_openai(
     client: AsyncOpenAI,
     model: str,
@@ -109,14 +113,18 @@ async def _call_openai(
         {"role": "user", "content": user_prompt},
     ]
 
+    base_kwargs = dict(
+        model=model,
+        max_completion_tokens=max_tokens,
+        messages=messages,
+        response_format={"type": "json_object"},
+    )
+    if model not in _OPENAI_NO_TEMPERATURE:
+        base_kwargs["temperature"] = temperature
+
     for attempt in range(retries + 1):
-        response = await client.chat.completions.create(
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            messages=messages,
-            response_format={"type": "json_object"},
-        )
+        base_kwargs["messages"] = messages
+        response = await client.chat.completions.create(**base_kwargs)
         choice = response.choices[0]
         text = choice.message.content
         if choice.finish_reason == "length":

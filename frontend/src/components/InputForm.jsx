@@ -7,8 +7,8 @@ const TABS = [
 ];
 
 const PROVIDERS = [
-  { key: "anthropic", label: "Claude (Sonnet + Opus)", placeholder: "sk-ant-..." },
-  { key: "openai", label: "OpenAI (GPT-5 mini + GPT-5.2)", placeholder: "sk-..." },
+  { key: "anthropic", label: "Claude (Sonnet + Opus)" },
+  { key: "openai", label: "OpenAI (GPT-5 mini + GPT-5.2)" },
 ];
 
 export default function InputForm({ onSubmit }) {
@@ -17,30 +17,31 @@ export default function InputForm({ onSubmit }) {
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
   const [provider, setProvider] = useState(() => localStorage.getItem("smtm_provider") || "anthropic");
-  const [apiKey, setApiKey] = useState(() =>
-    localStorage.getItem(`smtm_api_key_${localStorage.getItem("smtm_provider") || "anthropic"}`) || ""
-  );
+  const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem("smtm_api_key_anthropic") || "");
+  const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem("smtm_api_key_openai") || "");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem(`smtm_api_key_${provider}`, apiKey);
-    }
-  }, [apiKey, provider]);
+    if (anthropicKey) localStorage.setItem("smtm_api_key_anthropic", anthropicKey);
+  }, [anthropicKey]);
+
+  useEffect(() => {
+    if (openaiKey) localStorage.setItem("smtm_api_key_openai", openaiKey);
+  }, [openaiKey]);
 
   useEffect(() => {
     localStorage.setItem("smtm_provider", provider);
-    setApiKey(localStorage.getItem(`smtm_api_key_${provider}`) || "");
   }, [provider]);
+
+  const activeKey = provider === "openai" ? openaiKey : anthropicKey;
 
   const hasInput =
     (tab === "text" && text.trim().length > 0) ||
     (tab === "url" && url.trim().length > 0) ||
     (tab === "file" && file !== null);
 
-  const canSubmit = hasInput && apiKey.trim().length > 0 && !submitting;
-  const selectedProvider = PROVIDERS.find((p) => p.key === provider) || PROVIDERS[0];
+  const canSubmit = hasInput && activeKey.trim().length > 0 && !submitting;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +52,7 @@ export default function InputForm({ onSubmit }) {
         url: tab === "url" ? url : undefined,
         file: tab === "file" ? file : undefined,
         email: email || undefined,
-        apiKey,
+        apiKey: activeKey,
         provider,
       });
     } finally {
@@ -74,21 +75,50 @@ export default function InputForm({ onSubmit }) {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {provider === "openai" ? "OpenAI API Key" : "Anthropic API Key"}
-        </label>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={selectedProvider.placeholder}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        />
-        <p className="mt-1 text-xs text-gray-400">
-          Stored in your browser only. Sent only to the selected model provider through this backend.
-        </p>
+      {/* API Keys — both always visible */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Anthropic API Key
+            {provider === "anthropic" && (
+              <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold align-middle">
+                ACTIVE
+              </span>
+            )}
+          </label>
+          <input
+            type="password"
+            value={anthropicKey}
+            onChange={(e) => setAnthropicKey(e.target.value)}
+            placeholder="sk-ant-..."
+            className={`w-full rounded-md border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none ${
+              provider === "anthropic" ? "border-blue-300 bg-white" : "border-gray-200 bg-gray-50 text-gray-500"
+            }`}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            OpenAI API Key
+            {provider === "openai" && (
+              <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold align-middle">
+                ACTIVE
+              </span>
+            )}
+          </label>
+          <input
+            type="password"
+            value={openaiKey}
+            onChange={(e) => setOpenaiKey(e.target.value)}
+            placeholder="sk-..."
+            className={`w-full rounded-md border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none ${
+              provider === "openai" ? "border-blue-300 bg-white" : "border-gray-200 bg-gray-50 text-gray-500"
+            }`}
+          />
+        </div>
       </div>
+      <p className="text-xs text-gray-400 -mt-4">
+        Stored in your browser only. Sent only to the selected provider.
+      </p>
 
       {/* Tabs */}
       <div>
