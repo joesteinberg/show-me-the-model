@@ -29,7 +29,38 @@ function Prose({ text }) {
   );
 }
 
-export default function ResultsView({ result, onReset }) {
+function ShareBox({ analysisId }) {
+  const [copied, setCopied] = useState(null);
+  const shareUrl = `${window.location.origin}/#/results/${analysisId}`;
+
+  const copy = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(label);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+
+  return (
+    <div className="bg-slate-800 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+      <span className="text-slate-400 text-xs font-medium shrink-0">Share this analysis</span>
+      <button
+        onClick={() => copy(analysisId, "id")}
+        className="px-2.5 py-1 rounded bg-slate-700 text-slate-200 font-mono text-xs hover:bg-slate-600 transition-colors cursor-pointer"
+        title="Copy analysis ID"
+      >
+        {copied === "id" ? "Copied!" : analysisId}
+      </button>
+      <button
+        onClick={() => copy(shareUrl, "link")}
+        className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-500 transition-colors cursor-pointer"
+      >
+        {copied === "link" ? "Copied!" : "Copy link"}
+      </button>
+    </div>
+  );
+}
+
+export default function ResultsView({ result, analysisId, onReset }) {
   const { synthesis, merged_annotations, decomposition, metadata } = result;
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -97,6 +128,11 @@ export default function ResultsView({ result, onReset }) {
             ← Analyze another
           </button>
         </div>
+        {analysisId && (
+          <div className="max-w-[1100px] mx-auto mt-3">
+            <ShareBox analysisId={analysisId} />
+          </div>
+        )}
       </header>
 
       {/* Layout: sidebar + main */}

@@ -64,3 +64,12 @@ export async function fetchJob(jobId) {
   }
   return res.json();
 }
+
+export async function fetchResult(analysisId) {
+  const res = await fetch(`/api/results/${analysisId}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}

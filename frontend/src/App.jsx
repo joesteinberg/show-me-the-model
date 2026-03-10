@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { submitJob, connectSSE } from "./api";
+import { submitJob, connectSSE, fetchResult } from "./api";
 import InputForm from "./components/InputForm";
 import ProgressTracker from "./components/ProgressTracker";
 import ResultsView from "./components/ResultsView";
@@ -7,15 +7,37 @@ import ErrorMessage from "./components/ErrorMessage";
 
 const STAGE_ORDER = ["decomposition", "stage2", "dedup", "synthesis"];
 
+function parseHashRoute() {
+  const match = window.location.hash.match(/^#\/results\/([A-Za-z0-9_-]{6,12})$/);
+  return match ? match[1] : null;
+}
+
 export default function App() {
   const [phase, setPhase] = useState("idle"); // idle | running | done | error
   const [jobId, setJobId] = useState(null);
+  const [analysisId, setAnalysisId] = useState(null);
   const [stages, setStages] = useState({});
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // Demo mode: load saved result from /sample-result.json when ?demo=true
+  // Load result from hash route or demo mode on mount
   useEffect(() => {
+    const hashId = parseHashRoute();
+    if (hashId) {
+      setPhase("running");
+      fetchResult(hashId)
+        .then((data) => {
+          setResult(data);
+          setAnalysisId(data.analysis_id || hashId);
+          setPhase("done");
+        })
+        .catch((err) => {
+          setError({ message: `Failed to load analysis: ${err.message}` });
+          setPhase("error");
+        });
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "true") {
       fetch("/sample-result.json")
@@ -34,9 +56,11 @@ export default function App() {
   const reset = useCallback(() => {
     setPhase("idle");
     setJobId(null);
+    setAnalysisId(null);
     setStages({});
     setResult(null);
     setError(null);
+    window.location.hash = "";
   }, []);
 
   const handleSubmit = useCallback(async (formData) => {
@@ -55,6 +79,10 @@ export default function App() {
         },
         onDone: (data) => {
           setResult(data.result);
+          if (data.analysis_id) {
+            setAnalysisId(data.analysis_id);
+            window.location.hash = `#/results/${data.analysis_id}`;
+          }
           setPhase("done");
         },
         onError: (data) => {
@@ -70,7 +98,7 @@ export default function App() {
 
   // ResultsView renders its own full-page layout with header
   if (phase === "done") {
-    return <ResultsView result={result} onReset={reset} />;
+    return <ResultsView result={result} analysisId={analysisId} onReset={reset} />;
   }
 
   return (

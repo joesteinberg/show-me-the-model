@@ -4,11 +4,14 @@ import asyncio
 import json
 import logging
 import os
+import re
+import secrets
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from sse_starlette.sse import EventSourceResponse
@@ -108,16 +111,20 @@ async def _run_job(job_id: str, api_key: str, base_url: str, provider: str):
             "source_url": job.source_url,
             "input_mode": job.input_mode,
         }
+        # Generate short shareable ID and save result
+        analysis_id = secrets.token_urlsafe(6)  # 8-char URL-safe string
+        result["analysis_id"] = analysis_id
+
         job.final_result = result
         job.status = JobStatus.COMPLETED
-        job.queue.put_nowait(("done", {"job_id": job.id, "result": result}))
+        job.queue.put_nowait(("done", {"job_id": job.id, "analysis_id": analysis_id, "result": result}))
 
-        # Save result to disk for offline iteration
+        # Save result to disk
         results_dir = Path(__file__).resolve().parent.parent / "results"
         results_dir.mkdir(exist_ok=True)
-        result_path = results_dir / f"{job.id}-{provider}.json"
+        result_path = results_dir / f"{analysis_id}.json"
         result_path.write_text(json.dumps(result, indent=2))
-        logger.info("Saved result to %s", result_path)
+        logger.info("Saved result to %s (analysis_id=%s)", result_path, analysis_id)
 
         if job.email:
             await send_results_email(job.email, job.id, base_url)
@@ -252,3 +259,20 @@ async def get_job(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return job.to_dict()
+
+
+@app.get("/results/{analysis_id}")
+async def get_result(analysis_id: str):
+    """Fetch a saved analysis result by its short ID."""
+    # Validate ID format to prevent path traversal
+    if not re.match(r'^[A-Za-z0-9_-]{6,12}$', analysis_id):
+        raise HTTPException(status_code=400, detail="Invalid analysis ID format")
+
+    results_dir = Path(__file__).resolve().parent.parent / "results"
+    result_path = results_dir / f"{analysis_id}.json"
+
+    if not result_path.is_file():
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    data = json.loads(result_path.read_text())
+    return JSONResponse(content=data)

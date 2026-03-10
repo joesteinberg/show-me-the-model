@@ -60,7 +60,19 @@ export default function InputForm({ onSubmit }) {
     }
   };
 
+  const [lookupId, setLookupId] = useState("");
+
+  const handleLookup = (e) => {
+    e.preventDefault();
+    const id = lookupId.trim();
+    if (id) {
+      window.location.hash = `#/results/${id}`;
+      window.location.reload();
+    }
+  };
+
   return (
+    <div className="space-y-8">
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Workflow</label>
@@ -200,5 +212,27 @@ export default function InputForm({ onSubmit }) {
         {submitting ? "Submitting..." : "Analyze"}
       </button>
     </form>
+
+    {/* Lookup previous analysis */}
+    <div className="border-t border-gray-200 pt-6">
+      <p className="text-sm font-medium text-gray-700 mb-2">Look up a previous analysis</p>
+      <form onSubmit={handleLookup} className="flex gap-2">
+        <input
+          type="text"
+          value={lookupId}
+          onChange={(e) => setLookupId(e.target.value)}
+          placeholder="Enter analysis ID"
+          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={!lookupId.trim()}
+          className="rounded-md bg-gray-100 border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Look up
+        </button>
+      </form>
+    </div>
+    </div>
   );
 }
