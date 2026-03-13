@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 eval/outputs/
 /results/
+frontend/dist/
 frontend/public/sample-result.json
 .claude/
 *.egg-info/
