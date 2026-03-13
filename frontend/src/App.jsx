@@ -151,7 +151,7 @@ export default function App() {
         {phase === "idle" && <InputForm onSubmit={handleSubmit} />}
 
         {phase === "running" && (
-          <ProgressTracker stages={stages} stageOrder={STAGE_ORDER} />
+          <ProgressTracker stages={stages} stageOrder={STAGE_ORDER} jobId={jobId} />
         )}
 
         {phase === "error" && (
