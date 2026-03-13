@@ -50,6 +50,7 @@ async def send_results_email(email: str, analysis_id: str, base_url: str):
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": "ShowMeTheModel/1.0",
             },
             method="POST",
         )
