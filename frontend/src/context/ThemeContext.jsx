@@ -15,7 +15,7 @@ export function ThemeProvider({ children }) {
     // Migrate old neon theme keys
     if (stored === "neon-dark" || stored === "neon-midnight") return "dark";
     if (stored === "neon-light") return "light";
-    return stored || "dark";
+    return stored || "light";
   });
 
   useEffect(() => {
