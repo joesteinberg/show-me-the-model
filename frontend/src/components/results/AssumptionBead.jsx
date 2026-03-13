@@ -1,14 +1,31 @@
 import Tip from "../ui/Tip";
 
 const PLAUS = {
-  Weak: { fill: "#EF4444", bg: "#FEE2E2", border: "#EF4444" },
-  Contested: { fill: "#818CF8", bg: "#E0E7FF", border: "#818CF8" },
-  Mixed: { fill: "#F59E0B", bg: "#FEF3C7", border: "#F59E0B" },
-  Reasonable: { fill: "#34D399", bg: "#D1FAE5", border: "#34D399" },
+  Weak: {
+    fill: "var(--smtm-plaus-weak-fill)",
+    bg: "var(--smtm-plaus-weak-bg)",
+    border: "var(--smtm-plaus-weak-border)",
+  },
+  Contested: {
+    fill: "var(--smtm-plaus-contested-fill)",
+    bg: "var(--smtm-plaus-contested-bg)",
+    border: "var(--smtm-plaus-contested-border)",
+  },
+  Mixed: {
+    fill: "var(--smtm-plaus-mixed-fill)",
+    bg: "var(--smtm-plaus-mixed-bg)",
+    border: "var(--smtm-plaus-mixed-border)",
+  },
+  Reasonable: {
+    fill: "var(--smtm-plaus-reasonable-fill)",
+    bg: "var(--smtm-plaus-reasonable-bg)",
+    border: "var(--smtm-plaus-reasonable-border)",
+  },
 };
 
 export default function AssumptionBead({ assumption, dim }) {
-  const plausibility = assumption.plausibility || "Mixed";
+  const rawPlaus = assumption.plausibility || "Mixed";
+  const plausibility = rawPlaus === "Strong" ? "Reasonable" : rawPlaus;
   const p = PLAUS[plausibility] || PLAUS.Mixed;
   const filled = assumption.critical;
   const stated = assumption.stated_or_unstated === "Stated";
@@ -36,7 +53,6 @@ export default function AssumptionBead({ assumption, dim }) {
           background: filled ? p.fill : p.bg,
           border: `2.5px solid ${p.border}`,
           opacity: dim ? 0.18 : 1,
-          boxShadow: filled ? `0 1px 4px ${p.fill}50` : "none",
         }}
       />
     </Tip>

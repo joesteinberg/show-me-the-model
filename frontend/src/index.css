@@ -1,17 +1,413 @@
 @import "tailwindcss";
 
-@theme {
-  --font-display: 'Newsreader', Georgia, serif;
-  --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+/* ══════════════════════════════════════════════════════════
+   THEME SYSTEM — "Dark" (default) and "Light"
+   Color scheme: "Ink & Coral"
+   All colors flow through CSS custom properties so themes
+   switch instantly via [data-theme] on <html>.
+   ══════════════════════════════════════════════════════════ */
 
-  --color-severity-critical-bg: #FEF2F2;
-  --color-severity-critical-border: #DC2626;
-  --color-severity-critical-text: #991B1B;
-  --color-severity-moderate-bg: #FFFBEB;
-  --color-severity-moderate-border: #D97706;
-  --color-severity-moderate-text: #92400E;
-  --color-severity-minor-bg: #F0FDF4;
-  --color-severity-minor-border: #16A34A;
-  --color-severity-minor-text: #166534;
+/* ── Dark (default) ── */
+:root,
+[data-theme="dark"] {
+  /* Surfaces */
+  --smtm-bg-page: #141820;
+  --smtm-bg-surface: #1C2028;
+  --smtm-bg-surface-raised: #242830;
+  --smtm-bg-header: #101418;
+  --smtm-bg-input: #1A1E26;
+  --smtm-bg-input-focus: #1E2230;
+
+  /* Text */
+  --smtm-text-primary: #E8EAF0;
+  --smtm-text-secondary: #9CA3B4;
+  --smtm-text-muted: #5C6478;
+  --smtm-text-inverse: #141820;
+
+  /* Accent / Brand */
+  --smtm-accent-coral: #F06449;
+  --smtm-accent-teal: #2EC4B6;
+  --smtm-accent-gold: #E8B931;
+  --smtm-accent-purple: #8B7EC8;
+  --smtm-accent-orange: #E8A630;
+
+  /* Borders */
+  --smtm-border-default: #2A2E38;
+  --smtm-border-subtle: #222630;
+  --smtm-border-input: #343842;
+
+  /* Severity */
+  --smtm-sev-critical-bg: rgba(232, 69, 107, 0.10);
+  --smtm-sev-critical-border: #E8456B;
+  --smtm-sev-critical-text: #F07090;
+  --smtm-sev-critical-badge-bg: #E8456B;
+  --smtm-sev-critical-badge-text: #fff;
+
+  --smtm-sev-moderate-bg: rgba(232, 166, 48, 0.10);
+  --smtm-sev-moderate-border: #E8A630;
+  --smtm-sev-moderate-text: #F0C060;
+  --smtm-sev-moderate-badge-bg: #E8A630;
+  --smtm-sev-moderate-badge-text: #fff;
+
+  --smtm-sev-minor-bg: rgba(61, 187, 143, 0.10);
+  --smtm-sev-minor-border: #3DBB8F;
+  --smtm-sev-minor-text: #6CD4AD;
+  --smtm-sev-minor-badge-bg: #242830;
+  --smtm-sev-minor-badge-text: #9CA3B4;
+
+  /* Plausibility */
+  --smtm-plaus-weak-fill: #E8456B;
+  --smtm-plaus-weak-bg: rgba(232, 69, 107, 0.14);
+  --smtm-plaus-weak-border: #E8456B;
+  --smtm-plaus-weak-text: #F07090;
+  --smtm-plaus-contested-fill: #8B7EC8;
+  --smtm-plaus-contested-bg: rgba(139, 126, 200, 0.14);
+  --smtm-plaus-contested-border: #8B7EC8;
+  --smtm-plaus-contested-text: #A89EDA;
+  --smtm-plaus-mixed-fill: #E8A630;
+  --smtm-plaus-mixed-bg: rgba(232, 166, 48, 0.14);
+  --smtm-plaus-mixed-border: #E8A630;
+  --smtm-plaus-mixed-text: #F0C060;
+  --smtm-plaus-reasonable-fill: #3DBB8F;
+  --smtm-plaus-reasonable-bg: rgba(61, 187, 143, 0.14);
+  --smtm-plaus-reasonable-border: #3DBB8F;
+  --smtm-plaus-reasonable-text: #6CD4AD;
+
+  /* Strengths section */
+  --smtm-strength-bg: rgba(61, 187, 143, 0.06);
+  --smtm-strength-border: rgba(61, 187, 143, 0.20);
+  --smtm-strength-title: #6CD4AD;
+  --smtm-strength-divider: rgba(61, 187, 143, 0.12);
+
+  /* Contradiction section */
+  --smtm-contra-bg: rgba(232, 166, 48, 0.06);
+  --smtm-contra-border: rgba(232, 166, 48, 0.20);
+  --smtm-contra-title: #F0C060;
+  --smtm-contra-text: #F5D88A;
+  --smtm-contra-chevron: #E8A630;
+
+  /* Bottom Line box */
+  --smtm-bl-bg: #1A1E26;
+  --smtm-bl-grad-from: #F06449;
+  --smtm-bl-grad-to: #2EC4B6;
+  --smtm-bl-label: #F06449;
+  --smtm-bl-text: #C8CDD8;
+
+  /* Alternative section gradient */
+  --smtm-alt-from: rgba(139, 126, 200, 0.06);
+  --smtm-alt-to: rgba(46, 196, 182, 0.06);
+  --smtm-alt-border: rgba(139, 126, 200, 0.20);
+
+  /* Interactive / buttons */
+  --smtm-interactive: #F06449;
+  --smtm-interactive-hover: #F47E66;
+  --smtm-interactive-muted: rgba(240, 100, 73, 0.10);
+  --smtm-btn-primary-bg: #F06449;
+  --smtm-btn-primary-text: #fff;
+  --smtm-btn-primary-hover: #F47E66;
+  --smtm-btn-secondary-bg: #242830;
+  --smtm-btn-secondary-text: #E8EAF0;
+  --smtm-btn-secondary-border: #343842;
+  --smtm-btn-secondary-hover: #2C3038;
+  --smtm-btn-disabled-bg: #222630;
+  --smtm-btn-disabled-text: #5C6478;
+
+  /* Share box */
+  --smtm-share-bg: #1A1E26;
+  --smtm-share-label: #5C6478;
+  --smtm-share-id-bg: #242830;
+  --smtm-share-id-text: #C8CDD8;
+  --smtm-share-id-hover: #2C3038;
+
+  /* Tab / active indicator */
+  --smtm-tab-active-border: #F06449;
+  --smtm-tab-active-text: #F06449;
+  --smtm-tab-inactive-text: #5C6478;
+  --smtm-tab-inactive-hover: #9CA3B4;
+
+  /* Tooltip */
+  --smtm-tooltip-bg: #101418;
+  --smtm-tooltip-text: #C8CDD8;
+
+  /* Error */
+  --smtm-error-bg: rgba(232, 69, 107, 0.08);
+  --smtm-error-border: rgba(232, 69, 107, 0.22);
+  --smtm-error-title: #F07090;
+  --smtm-error-text: #F59AAE;
+  --smtm-error-btn-bg: #E8456B;
+  --smtm-error-btn-text: #fff;
+
+  /* Progress */
+  --smtm-progress-done: #3DBB8F;
+  --smtm-progress-active: #2EC4B6;
+  --smtm-progress-pending-border: #343842;
+
+  /* Sidenav */
+  --smtm-nav-active-text: #F06449;
+  --smtm-nav-active-bg: rgba(240, 100, 73, 0.08);
+  --smtm-nav-active-border: #F06449;
+  --smtm-nav-inactive-text: #5C6478;
+  --smtm-nav-hover-text: #9CA3B4;
+  --smtm-nav-hover-bg: rgba(255, 255, 255, 0.03);
+
+  /* Decomposition */
+  --smtm-decomp-heading: #E8EAF0;
+  --smtm-decomp-text: #9CA3B4;
+  --smtm-decomp-muted: #5C6478;
+  --smtm-decomp-quote-border: #343842;
+
+  /* Annotation ref badge */
+  --smtm-ref-badge-bg: #E8456B;
+  --smtm-ref-badge-text: #fff;
+
+  /* Issue type pill */
+  --smtm-issue-pill-bg: rgba(255, 255, 255, 0.06);
+  --smtm-issue-pill-text: #9CA3B4;
+
+  /* Dig deeper */
+  --smtm-dig-label: #2EC4B6;
+  --smtm-dig-label-hover: #4DD4C8;
+  --smtm-dig-bg: rgba(46, 196, 182, 0.04);
+
+  /* Source pass badge */
+  --smtm-source-badge-bg: rgba(255, 255, 255, 0.05);
+  --smtm-source-badge-text: #5C6478;
+
+  /* Active badge (ACTIVE label on API key) */
+  --smtm-active-badge-bg: rgba(46, 196, 182, 0.12);
+  --smtm-active-badge-text: #2EC4B6;
+
+  /* Input field active vs inactive */
+  --smtm-input-active-border: rgba(240, 100, 73, 0.35);
+  --smtm-input-inactive-border: #222630;
+  --smtm-input-inactive-bg: #161A22;
+  --smtm-input-inactive-text: #5C6478;
+
+  /* Assumption legend */
+  --smtm-legend-bg: rgba(255, 255, 255, 0.03);
+  --smtm-legend-border: #2A2E38;
+  --smtm-legend-inactive: #5C6478;
+  --smtm-legend-divider: #343842;
+  --smtm-legend-critical-fill: #9CA3B4;
+
+  /* Explicit/implicit label */
+  --smtm-explicit-color: #2EC4B6;
+  --smtm-explicit-active: #4DD4C8;
+  --smtm-implicit-color: #E8A630;
+  --smtm-implicit-active: #F0C060;
+
+  /* Insight text */
+  --smtm-insight-text: #F07090;
+
+  /* Divider in summary dashboard */
+  --smtm-divider: #2A2E38;
+
+  /* Title colors */
+  --smtm-title-primary: #F06449;
+  --smtm-title-secondary: #2EC4B6;
+
+  color-scheme: dark;
+}
+
+/* ── Light ── */
+[data-theme="light"] {
+  --smtm-bg-page: #F8F6F3;
+  --smtm-bg-surface: #FFFFFF;
+  --smtm-bg-surface-raised: #F2F0ED;
+  --smtm-bg-header: #FFFFFF;
+  --smtm-bg-input: #FFFFFF;
+  --smtm-bg-input-focus: #FFFFFF;
+
+  --smtm-text-primary: #1C2028;
+  --smtm-text-secondary: #4A5068;
+  --smtm-text-muted: #8890A4;
+  --smtm-text-inverse: #F8F6F3;
+
+  --smtm-accent-coral: #E05540;
+  --smtm-accent-teal: #1BA89C;
+  --smtm-accent-gold: #C99B1D;
+  --smtm-accent-purple: #6B5FA8;
+  --smtm-accent-orange: #C48B20;
+
+  --smtm-border-default: #DDD8D2;
+  --smtm-border-subtle: #EAE6E0;
+  --smtm-border-input: #C8C2BA;
+
+  --smtm-sev-critical-bg: rgba(209, 58, 92, 0.06);
+  --smtm-sev-critical-border: #D13A5C;
+  --smtm-sev-critical-text: #B0304E;
+  --smtm-sev-critical-badge-bg: #D13A5C;
+  --smtm-sev-critical-badge-text: #fff;
+
+  --smtm-sev-moderate-bg: rgba(196, 139, 32, 0.06);
+  --smtm-sev-moderate-border: #C48B20;
+  --smtm-sev-moderate-text: #8A6210;
+  --smtm-sev-moderate-badge-bg: #C48B20;
+  --smtm-sev-moderate-badge-text: #fff;
+
+  --smtm-sev-minor-bg: rgba(42, 158, 118, 0.06);
+  --smtm-sev-minor-border: #2A9E76;
+  --smtm-sev-minor-text: #1A7A5A;
+  --smtm-sev-minor-badge-bg: #F2F0ED;
+  --smtm-sev-minor-badge-text: #4A5068;
+
+  --smtm-plaus-weak-fill: #D13A5C;
+  --smtm-plaus-weak-bg: rgba(209, 58, 92, 0.07);
+  --smtm-plaus-weak-border: #D13A5C;
+  --smtm-plaus-weak-text: #B0304E;
+  --smtm-plaus-contested-fill: #6B5FA8;
+  --smtm-plaus-contested-bg: rgba(107, 95, 168, 0.07);
+  --smtm-plaus-contested-border: #6B5FA8;
+  --smtm-plaus-contested-text: #4E4490;
+  --smtm-plaus-mixed-fill: #C48B20;
+  --smtm-plaus-mixed-bg: rgba(196, 139, 32, 0.07);
+  --smtm-plaus-mixed-border: #C48B20;
+  --smtm-plaus-mixed-text: #8A6210;
+  --smtm-plaus-reasonable-fill: #2A9E76;
+  --smtm-plaus-reasonable-bg: rgba(42, 158, 118, 0.07);
+  --smtm-plaus-reasonable-border: #2A9E76;
+  --smtm-plaus-reasonable-text: #1A7A5A;
+
+  --smtm-strength-bg: rgba(42, 158, 118, 0.05);
+  --smtm-strength-border: rgba(42, 158, 118, 0.18);
+  --smtm-strength-title: #1A7A5A;
+  --smtm-strength-divider: rgba(42, 158, 118, 0.12);
+
+  --smtm-contra-bg: rgba(196, 139, 32, 0.05);
+  --smtm-contra-border: rgba(196, 139, 32, 0.18);
+  --smtm-contra-title: #8A6210;
+  --smtm-contra-text: #6A4A08;
+  --smtm-contra-chevron: #C48B20;
+
+  --smtm-bl-bg: #F2F0ED;
+  --smtm-bl-grad-from: #E05540;
+  --smtm-bl-grad-to: #1BA89C;
+  --smtm-bl-label: #E05540;
+  --smtm-bl-text: #4A5068;
+
+  --smtm-alt-from: rgba(107, 95, 168, 0.04);
+  --smtm-alt-to: rgba(27, 168, 156, 0.04);
+  --smtm-alt-border: rgba(107, 95, 168, 0.16);
+
+  --smtm-interactive: #E05540;
+  --smtm-interactive-hover: #C8472E;
+  --smtm-interactive-muted: rgba(224, 85, 64, 0.08);
+  --smtm-btn-primary-bg: #E05540;
+  --smtm-btn-primary-text: #fff;
+  --smtm-btn-primary-hover: #C8472E;
+  --smtm-btn-secondary-bg: #F2F0ED;
+  --smtm-btn-secondary-text: #1C2028;
+  --smtm-btn-secondary-border: #DDD8D2;
+  --smtm-btn-secondary-hover: #E6E2DC;
+  --smtm-btn-disabled-bg: #EAE6E0;
+  --smtm-btn-disabled-text: #8890A4;
+
+  --smtm-share-bg: #F2F0ED;
+  --smtm-share-label: #8890A4;
+  --smtm-share-id-bg: #E6E2DC;
+  --smtm-share-id-text: #4A5068;
+  --smtm-share-id-hover: #DDD8D2;
+
+  --smtm-tab-active-border: #E05540;
+  --smtm-tab-active-text: #E05540;
+  --smtm-tab-inactive-text: #8890A4;
+  --smtm-tab-inactive-hover: #4A5068;
+
+  --smtm-tooltip-bg: #1C2028;
+  --smtm-tooltip-text: #E8EAF0;
+
+  --smtm-error-bg: rgba(209, 58, 92, 0.05);
+  --smtm-error-border: rgba(209, 58, 92, 0.18);
+  --smtm-error-title: #B0304E;
+  --smtm-error-text: #D13A5C;
+  --smtm-error-btn-bg: #D13A5C;
+  --smtm-error-btn-text: #fff;
+
+  --smtm-progress-done: #2A9E76;
+  --smtm-progress-active: #1BA89C;
+  --smtm-progress-pending-border: #DDD8D2;
+
+  --smtm-nav-active-text: #E05540;
+  --smtm-nav-active-bg: rgba(224, 85, 64, 0.06);
+  --smtm-nav-active-border: #E05540;
+  --smtm-nav-inactive-text: #8890A4;
+  --smtm-nav-hover-text: #4A5068;
+  --smtm-nav-hover-bg: rgba(0, 0, 0, 0.02);
+
+  --smtm-decomp-heading: #1C2028;
+  --smtm-decomp-text: #4A5068;
+  --smtm-decomp-muted: #8890A4;
+  --smtm-decomp-quote-border: #DDD8D2;
+
+  --smtm-ref-badge-bg: #D13A5C;
+  --smtm-ref-badge-text: #fff;
+
+  --smtm-issue-pill-bg: #F2F0ED;
+  --smtm-issue-pill-text: #4A5068;
+
+  --smtm-dig-label: #1BA89C;
+  --smtm-dig-label-hover: #158F84;
+  --smtm-dig-bg: rgba(27, 168, 156, 0.04);
+
+  --smtm-source-badge-bg: #F2F0ED;
+  --smtm-source-badge-text: #8890A4;
+
+  --smtm-active-badge-bg: rgba(27, 168, 156, 0.10);
+  --smtm-active-badge-text: #1BA89C;
+
+  --smtm-input-active-border: rgba(224, 85, 64, 0.35);
+  --smtm-input-inactive-border: #EAE6E0;
+  --smtm-input-inactive-bg: #F5F3F0;
+  --smtm-input-inactive-text: #8890A4;
+
+  --smtm-legend-bg: #F5F3F0;
+  --smtm-legend-border: #DDD8D2;
+  --smtm-legend-inactive: #8890A4;
+  --smtm-legend-divider: #DDD8D2;
+  --smtm-legend-critical-fill: #4A5068;
+
+  --smtm-explicit-color: #1BA89C;
+  --smtm-explicit-active: #158F84;
+  --smtm-implicit-color: #C48B20;
+  --smtm-implicit-active: #A07218;
+
+  --smtm-insight-text: #B0304E;
+
+  --smtm-divider: #DDD8D2;
+
+  /* Title colors */
+  --smtm-title-primary: #E05540;
+  --smtm-title-secondary: #1BA89C;
+
+  color-scheme: light;
+}
+
+/* ── Tailwind @theme integration ── */
+@theme {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Global base styles ── */
+body {
+  background: var(--smtm-bg-page);
+  color: var(--smtm-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Smooth theme transitions on key surfaces */
+.theme-transition {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Selection color */
+::selection {
+  background: var(--smtm-accent-coral);
+  color: #fff;
+}
+
+/* Scrollbar styling for dark themes */
+:root:not([data-theme="light"]) {
+  scrollbar-color: var(--smtm-border-default) transparent;
 }

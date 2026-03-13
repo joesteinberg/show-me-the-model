@@ -1,71 +1,88 @@
 import { useState, useMemo } from "react";
 
-const PLAUSIBILITY_STYLES = {
-  Weak: "bg-red-100 text-red-800",
-  Mixed: "bg-yellow-100 text-yellow-800",
-  Contested: "bg-gray-100 text-gray-700",
-  Strong: "bg-green-100 text-green-800",
-};
+const PLAUS_ORDER = ["Weak", "Contested", "Mixed", "Reasonable"];
 
-const PLAUS_ORDER = ["Weak", "Mixed", "Contested", "Strong"];
+function normPlaus(p) {
+  if (p === "Strong") return "Reasonable";
+  return p || "Mixed";
+}
 
 function sortByImplausibility(assumptions) {
   return [...assumptions].sort((a, b) => {
-    const pA = PLAUS_ORDER.indexOf(a.plausibility || "Mixed");
-    const pB = PLAUS_ORDER.indexOf(b.plausibility || "Mixed");
+    const pA = PLAUS_ORDER.indexOf(normPlaus(a.plausibility));
+    const pB = PLAUS_ORDER.indexOf(normPlaus(b.plausibility));
     if (pA !== pB) return pA - pB;
-    // Within same plausibility, critical first
     return (b.critical ? 1 : 0) - (a.critical ? 1 : 0);
   });
 }
 
+const PLAUS_STYLE = {
+  Weak: { bg: "var(--smtm-plaus-weak-bg)", color: "var(--smtm-plaus-weak-text)" },
+  Contested: { bg: "var(--smtm-plaus-contested-bg)", color: "var(--smtm-plaus-contested-text)" },
+  Mixed: { bg: "var(--smtm-plaus-mixed-bg)", color: "var(--smtm-plaus-mixed-text)" },
+  Reasonable: { bg: "var(--smtm-plaus-reasonable-bg)", color: "var(--smtm-plaus-reasonable-text)" },
+  Strong: { bg: "var(--smtm-plaus-reasonable-bg)", color: "var(--smtm-plaus-reasonable-text)" },
+};
+
 function AssumptionRow({ assumption, index }) {
   const [open, setOpen] = useState(false);
   const isStated = assumption.stated_or_unstated === "Stated";
-  const plausStyle =
-    PLAUSIBILITY_STYLES[assumption.plausibility] || PLAUSIBILITY_STYLES.Mixed;
+  const plaus = normPlaus(assumption.plausibility);
+  const ps = PLAUS_STYLE[plaus] || PLAUS_STYLE.Mixed;
 
   return (
     <>
       <tr
         onClick={() => setOpen(!open)}
-        className={`cursor-pointer transition-colors ${
-          open ? "bg-slate-50" : index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-        }`}
+        className="cursor-pointer transition-colors"
+        style={{
+          background: open
+            ? "var(--smtm-bg-surface-raised)"
+            : index % 2 === 0
+            ? "var(--smtm-bg-surface)"
+            : "var(--smtm-legend-bg)",
+        }}
       >
-        <td className="px-3 py-2.5 text-[13px] font-semibold font-mono text-gray-400 w-9 align-middle">
+        <td className="px-3 py-2.5 text-[13px] font-semibold font-mono w-9 align-middle" style={{ color: "var(--smtm-text-muted)" }}>
           {assumption.number}
         </td>
-        <td className={`px-3 py-2.5 font-body text-[13px] leading-snug align-middle ${
-          assumption.critical ? "font-semibold text-slate-900" : "text-slate-900"
-        }`}>
+        <td
+          className="px-3 py-2.5 font-body text-[13px] leading-snug align-middle"
+          style={{
+            color: "var(--smtm-text-primary)",
+            fontWeight: assumption.critical ? 600 : 400,
+          }}
+        >
           {assumption.assumption}
         </td>
         <td className="px-3 py-2.5 text-center align-middle">
           <span
-            className={`inline-block w-2 h-2 rounded-full ${
-              isStated ? "bg-blue-500" : "bg-amber-400"
-            }`}
-          />
+            className="text-[11px] font-semibold font-body"
+            style={{
+              color: isStated ? "var(--smtm-plaus-reasonable-text)" : "var(--smtm-plaus-weak-text)",
+            }}
+          >
+            {isStated ? "Yes" : "No"}
+          </span>
         </td>
-        {/* Plausibility column */}
         <td className="px-3 py-2.5 text-center align-middle">
           {assumption.plausibility && (
             <span
-              className={`text-[11px] px-2 py-0.5 rounded font-semibold font-body ${plausStyle}`}
+              className="text-[11px] px-2 py-0.5 rounded font-semibold font-body"
+              style={{ background: ps.bg, color: ps.color }}
             >
-              {assumption.plausibility}
+              {plaus}
             </span>
           )}
         </td>
-        <td className="px-3 py-2.5 text-center text-gray-400 text-sm align-middle">
+        <td className="px-3 py-2.5 text-center text-sm align-middle" style={{ color: "var(--smtm-text-muted)" }}>
           {open ? "▴" : "▾"}
         </td>
       </tr>
       {open && (
         <tr>
           <td colSpan={5} className="px-3 pb-4 pt-1">
-            <div className="ml-9 text-[13px] leading-relaxed text-gray-600 font-body">
+            <div className="ml-9 text-[13px] leading-relaxed font-body" style={{ color: "var(--smtm-text-secondary)" }}>
               {assumption.assessment}
             </div>
           </td>
@@ -80,27 +97,34 @@ export default function AssumptionsTable({ assumptions }) {
 
   const sorted = useMemo(() => sortByImplausibility(assumptions), [assumptions]);
 
+  const thStyle = {
+    color: "var(--smtm-text-muted)",
+    borderBottom: "2px solid var(--smtm-border-default)",
+    background: "var(--smtm-bg-surface)",
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="rounded-xl border overflow-hidden" style={{ background: "var(--smtm-bg-surface)", borderColor: "var(--smtm-border-default)" }}>
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b-2 border-gray-200 font-body text-left w-9 sticky top-0 bg-white z-[1]">
+            <th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide font-body text-left w-9 sticky top-0 z-[1]" style={thStyle}>
               #
             </th>
-            <th className="px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b-2 border-gray-200 font-body text-left sticky top-0 bg-white z-[1]">
+            <th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide font-body text-left sticky top-0 z-[1]" style={thStyle}>
               Assumption
             </th>
             <th
-              className="px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b-2 border-gray-200 font-body text-center w-[60px] sticky top-0 bg-white z-[1]"
-              title="Blue = stated explicitly. Amber = unstated/implicit."
+              className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide font-body text-center w-[60px] sticky top-0 z-[1]"
+              style={thStyle}
+              title="Whether the assumption is explicitly stated in the essay"
             >
-              Stated
+              Explicit
             </th>
-            <th className="px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b-2 border-gray-200 font-body text-center w-[80px] sticky top-0 bg-white z-[1]">
+            <th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide font-body text-center w-[80px] sticky top-0 z-[1]" style={thStyle}>
               Plausible
             </th>
-            <th className="px-3 py-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b-2 border-gray-200 w-[30px] sticky top-0 bg-white z-[1]" />
+            <th className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide w-[30px] sticky top-0 z-[1]" style={thStyle} />
           </tr>
         </thead>
         <tbody>
@@ -109,18 +133,24 @@ export default function AssumptionsTable({ assumptions }) {
           ))}
         </tbody>
       </table>
-      <div className="flex gap-4 px-4 py-2.5 border-t border-gray-100 text-[11px] text-gray-400 font-body">
+      <div
+        className="flex gap-4 px-4 py-2.5 text-[11px] font-body"
+        style={{
+          borderTop: "1px solid var(--smtm-border-subtle)",
+          color: "var(--smtm-text-muted)",
+        }}
+      >
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1 align-middle" />{" "}
-          Stated
+          <span className="font-semibold mr-1 align-middle" style={{ color: "var(--smtm-plaus-reasonable-text)" }}>Yes</span>{" "}
+          = Explicit
         </span>
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1 align-middle" />{" "}
-          Unstated
+          <span className="font-semibold mr-1 align-middle" style={{ color: "var(--smtm-plaus-weak-text)" }}>No</span>{" "}
+          = Implicit
         </span>
         <span>
           <span className="font-semibold mr-1 align-middle">Bold</span>{" "}
-          = Load-bearing
+          = Critical
         </span>
       </div>
     </div>

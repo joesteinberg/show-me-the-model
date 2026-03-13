@@ -3,7 +3,7 @@ import AssumptionsMatrix from "./AssumptionsMatrix";
 import BalanceRow from "./BalanceRow";
 
 function Divider() {
-  return <div className="h-px bg-gray-200 my-3.5" />;
+  return <div className="h-px my-3.5" style={{ background: "var(--smtm-divider)" }} />;
 }
 
 export default function SummaryDashboard({
@@ -13,10 +13,17 @@ export default function SummaryDashboard({
   contradictions,
 }) {
   return (
-    <div className="bg-white rounded-[14px] px-6 py-5 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)]">
-      <IssuesRow annotations={annotations} />
-      <Divider />
+    <div
+      className="rounded-[14px] px-6 py-5 border"
+      style={{
+        background: "var(--smtm-bg-surface)",
+        borderColor: "var(--smtm-border-default)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)",
+      }}
+    >
       <AssumptionsMatrix assumptions={assumptions} />
+      <Divider />
+      <IssuesRow annotations={annotations} />
       <Divider />
       <BalanceRow strengths={strengths} contradictions={contradictions} />
     </div>

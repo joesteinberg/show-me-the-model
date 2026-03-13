@@ -9,10 +9,12 @@ export default function DecompositionView({ decomposition }) {
     <section>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-base font-semibold text-gray-900 hover:text-gray-700"
+        className="flex items-center gap-2 text-base font-semibold font-body"
+        style={{ color: "var(--smtm-text-primary)" }}
       >
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`}
+          className={`h-4 w-4 transition-transform ${open ? "rotate-90" : ""}`}
+          style={{ color: "var(--smtm-text-muted)" }}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -30,8 +32,10 @@ export default function DecompositionView({ decomposition }) {
           {/* Central Thesis */}
           {decomposition.central_thesis && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">Central Thesis</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <h4 className="text-sm font-semibold mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+                Central Thesis
+              </h4>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--smtm-decomp-text)" }}>
                 {decomposition.central_thesis}
               </p>
             </div>
@@ -40,13 +44,21 @@ export default function DecompositionView({ decomposition }) {
           {/* Key Claims */}
           {decomposition.key_claims?.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Key Claims</h4>
+              <h4 className="text-sm font-semibold mb-2 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+                Key Claims
+              </h4>
               <div className="space-y-3">
                 {decomposition.key_claims.map((c, i) => (
                   <div key={i} className="text-sm">
-                    <p className="text-gray-800 font-medium">{c.claim}</p>
+                    <p className="font-medium" style={{ color: "var(--smtm-text-primary)" }}>{c.claim}</p>
                     {c.quoted_passage && (
-                      <blockquote className="mt-1 border-l-3 border-gray-300 pl-3 text-xs italic text-gray-500 leading-relaxed">
+                      <blockquote
+                        className="mt-1 border-l-3 pl-3 text-xs italic leading-relaxed"
+                        style={{
+                          borderColor: "var(--smtm-decomp-quote-border)",
+                          color: "var(--smtm-decomp-muted)",
+                        }}
+                      >
                         {c.quoted_passage}
                       </blockquote>
                     )}
@@ -59,11 +71,13 @@ export default function DecompositionView({ decomposition }) {
           {/* Stated Assumptions */}
           {decomposition.stated_assumptions?.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Stated Assumptions</h4>
+              <h4 className="text-sm font-semibold mb-2 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+                Explicit Assumptions
+              </h4>
               <ul className="space-y-1.5">
                 {decomposition.stated_assumptions.map((a, i) => (
-                  <li key={i} className="text-sm text-gray-600 leading-relaxed flex gap-2">
-                    <span className="text-gray-400 flex-shrink-0">&bull;</span>
+                  <li key={i} className="text-sm leading-relaxed flex gap-2" style={{ color: "var(--smtm-decomp-text)" }}>
+                    <span style={{ color: "var(--smtm-decomp-muted)" }} className="flex-shrink-0">&bull;</span>
                     {a}
                   </li>
                 ))}
@@ -74,10 +88,12 @@ export default function DecompositionView({ decomposition }) {
           {/* Causal Chain */}
           {decomposition.causal_chain && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">Causal Chain</h4>
+              <h4 className="text-sm font-semibold mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+                Causal Chain
+              </h4>
               <div className="space-y-2">
                 {decomposition.causal_chain.split(/\n\n+/).map((p, i) => (
-                  <p key={i} className="text-sm text-gray-600 leading-relaxed">{p}</p>
+                  <p key={i} className="text-sm leading-relaxed" style={{ color: "var(--smtm-decomp-text)" }}>{p}</p>
                 ))}
               </div>
             </div>
@@ -86,8 +102,10 @@ export default function DecompositionView({ decomposition }) {
           {/* Policy or Shock */}
           {decomposition.policy_or_shock && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">Exogenous Driver</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <h4 className="text-sm font-semibold mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+                Exogenous Driver
+              </h4>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--smtm-decomp-text)" }}>
                 {decomposition.policy_or_shock}
               </p>
             </div>

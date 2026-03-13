@@ -4,6 +4,8 @@ import InputForm from "./components/InputForm";
 import ProgressTracker from "./components/ProgressTracker";
 import ResultsView from "./components/ResultsView";
 import ErrorMessage from "./components/ErrorMessage";
+import ThemeSwitcher from "./components/ThemeSwitcher";
+import { useTheme } from "./context/ThemeContext";
 
 const STAGE_ORDER = ["decomposition", "stage2", "dedup", "synthesis"];
 
@@ -20,11 +22,12 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // Load result from hash route or demo mode on mount
-  useEffect(() => {
+  // Navigate to a result by ID, or reset to idle if no hash
+  const navigateToHash = useCallback(() => {
     const hashId = parseHashRoute();
     if (hashId) {
       setPhase("running");
+      setError(null);
       fetchResult(hashId)
         .then((data) => {
           setResult(data);
@@ -35,11 +38,24 @@ export default function App() {
           setError({ message: `Failed to load analysis: ${err.message}` });
           setPhase("error");
         });
-      return;
+    } else {
+      setPhase("idle");
+      setJobId(null);
+      setAnalysisId(null);
+      setStages({});
+      setResult(null);
+      setError(null);
     }
+  }, []);
 
+  // Handle initial load and back/forward navigation
+  useEffect(() => {
+    const hashId = parseHashRoute();
     const params = new URLSearchParams(window.location.search);
-    if (params.get("demo") === "true") {
+
+    if (hashId) {
+      navigateToHash();
+    } else if (params.get("demo") === "true") {
       fetch("/sample-result.json")
         .then((res) => res.json())
         .then((data) => {
@@ -51,7 +67,10 @@ export default function App() {
           setPhase("error");
         });
     }
-  }, []);
+
+    window.addEventListener("popstate", navigateToHash);
+    return () => window.removeEventListener("popstate", navigateToHash);
+  }, [navigateToHash]);
 
   const reset = useCallback(() => {
     setPhase("idle");
@@ -60,7 +79,7 @@ export default function App() {
     setStages({});
     setResult(null);
     setError(null);
-    window.location.hash = "";
+    window.history.pushState(null, "", window.location.pathname + window.location.search);
   }, []);
 
   const handleSubmit = useCallback(async (formData) => {
@@ -81,7 +100,7 @@ export default function App() {
           setResult(data.result);
           if (data.analysis_id) {
             setAnalysisId(data.analysis_id);
-            window.location.hash = `#/results/${data.analysis_id}`;
+            window.history.pushState(null, "", `#/results/${data.analysis_id}`);
           }
           setPhase("done");
         },
@@ -102,22 +121,33 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-4">
-          <h1
-            className="text-xl font-semibold tracking-tight cursor-pointer"
-            onClick={phase === "idle" ? undefined : reset}
-          >
-            Show Me the Model
-          </h1>
-          <p className="text-sm text-gray-500">
-            Rigorous structural analysis of economic arguments
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen relative" style={{ background: "var(--smtm-bg-page)" }}>
+      {/* Theme switcher — top right corner */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeSwitcher />
+      </div>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      {/* Title — same width as the form (max-w-4xl = 896px) */}
+      <div
+        className="mx-auto max-w-4xl px-4 pt-14 pb-8 text-center"
+        onClick={phase === "idle" ? undefined : reset}
+        style={{ cursor: phase === "idle" ? "default" : "pointer" }}
+      >
+        <h1
+          className="font-display font-800 leading-[1.05] tracking-tight m-0"
+          style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", color: "var(--smtm-title-primary)" }}
+        >
+          Show Me the Model!
+        </h1>
+        <p
+          className="font-mono font-medium uppercase tracking-[0.2em] mt-2 mb-0"
+          style={{ fontSize: "clamp(0.75rem, 1.8vw, 1.1rem)", color: "var(--smtm-title-secondary)" }}
+        >
+          Economics Slop Detector
+        </p>
+      </div>
+
+      <main className="mx-auto max-w-4xl px-4 pb-8">
         {phase === "idle" && <InputForm onSubmit={handleSubmit} />}
 
         {phase === "running" && (

@@ -66,20 +66,34 @@ export default function InputForm({ onSubmit }) {
     e.preventDefault();
     const id = lookupId.trim();
     if (id) {
-      window.location.hash = `#/results/${id}`;
-      window.location.reload();
+      window.history.pushState(null, "", `#/results/${id}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
   };
+
+  const inputBase = {
+    background: "var(--smtm-bg-input)",
+    color: "var(--smtm-text-primary)",
+    borderColor: "var(--smtm-border-input)",
+  };
+
+  const inputFocus = "focus:outline-none";
 
   return (
     <div className="space-y-8">
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Workflow</label>
+        <label className="block text-sm font-medium mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+          Workflow
+        </label>
         <select
           value={provider}
           onChange={(e) => setProvider(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className={`w-full rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+          style={{
+            ...inputBase,
+            borderColor: "var(--smtm-border-input)",
+          }}
         >
           {PROVIDERS.map((p) => (
             <option key={p.key} value={p.key}>{p.label}</option>
@@ -90,10 +104,16 @@ export default function InputForm({ onSubmit }) {
       {/* API Keys — both always visible */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
             Anthropic API Key
             {provider === "anthropic" && (
-              <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold align-middle">
+              <span
+                className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded font-semibold align-middle"
+                style={{
+                  background: "var(--smtm-active-badge-bg)",
+                  color: "var(--smtm-active-badge-text)",
+                }}
+              >
                 ACTIVE
               </span>
             )}
@@ -103,16 +123,28 @@ export default function InputForm({ onSubmit }) {
             value={anthropicKey}
             onChange={(e) => setAnthropicKey(e.target.value)}
             placeholder="sk-ant-..."
-            className={`w-full rounded-md border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none ${
-              provider === "anthropic" ? "border-blue-300 bg-white" : "border-gray-200 bg-gray-50 text-gray-500"
-            }`}
+            className={`w-full rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+            style={provider === "anthropic" ? {
+              ...inputBase,
+              borderColor: "var(--smtm-input-active-border)",
+            } : {
+              background: "var(--smtm-input-inactive-bg)",
+              color: "var(--smtm-input-inactive-text)",
+              borderColor: "var(--smtm-input-inactive-border)",
+            }}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
             OpenAI API Key
             {provider === "openai" && (
-              <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold align-middle">
+              <span
+                className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded font-semibold align-middle"
+                style={{
+                  background: "var(--smtm-active-badge-bg)",
+                  color: "var(--smtm-active-badge-text)",
+                }}
+              >
                 ACTIVE
               </span>
             )}
@@ -122,29 +154,35 @@ export default function InputForm({ onSubmit }) {
             value={openaiKey}
             onChange={(e) => setOpenaiKey(e.target.value)}
             placeholder="sk-..."
-            className={`w-full rounded-md border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none ${
-              provider === "openai" ? "border-blue-300 bg-white" : "border-gray-200 bg-gray-50 text-gray-500"
-            }`}
+            className={`w-full rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+            style={provider === "openai" ? {
+              ...inputBase,
+              borderColor: "var(--smtm-input-active-border)",
+            } : {
+              background: "var(--smtm-input-inactive-bg)",
+              color: "var(--smtm-input-inactive-text)",
+              borderColor: "var(--smtm-input-inactive-border)",
+            }}
           />
         </div>
       </div>
-      <p className="text-xs text-gray-400 -mt-4">
+      <p className="text-xs -mt-4" style={{ color: "var(--smtm-text-muted)" }}>
         Stored in your browser only. Sent only to the selected provider.
       </p>
 
       {/* Tabs */}
       <div>
-        <div className="flex gap-1 border-b border-gray-200">
+        <div className="flex gap-1 border-b" style={{ borderColor: "var(--smtm-border-default)" }}>
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${
-                tab === t.key
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              className="px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors font-body"
+              style={{
+                borderColor: tab === t.key ? "var(--smtm-tab-active-border)" : "transparent",
+                color: tab === t.key ? "var(--smtm-tab-active-text)" : "var(--smtm-tab-inactive-text)",
+              }}
             >
               {t.label}
             </button>
@@ -158,7 +196,8 @@ export default function InputForm({ onSubmit }) {
               onChange={(e) => setText(e.target.value)}
               rows={12}
               placeholder="Paste the essay or article text here..."
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-y"
+              className={`w-full rounded-md border px-3 py-2 text-sm resize-y ${inputFocus}`}
+              style={inputBase}
             />
           )}
 
@@ -168,13 +207,21 @@ export default function InputForm({ onSubmit }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/article"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className={`w-full rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+              style={inputBase}
             />
           )}
 
           {tab === "file" && (
             <div className="flex items-center gap-3">
-              <label className="cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <label
+                className="cursor-pointer rounded-md border px-4 py-2 text-sm font-medium font-body"
+                style={{
+                  background: "var(--smtm-btn-secondary-bg)",
+                  borderColor: "var(--smtm-btn-secondary-border)",
+                  color: "var(--smtm-btn-secondary-text)",
+                }}
+              >
                 Choose PDF
                 <input
                   type="file"
@@ -183,7 +230,7 @@ export default function InputForm({ onSubmit }) {
                   onChange={(e) => setFile(e.target.files[0] || null)}
                 />
               </label>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm" style={{ color: "var(--smtm-text-muted)" }}>
                 {file ? file.name : "No file selected"}
               </span>
             </div>
@@ -192,7 +239,7 @@ export default function InputForm({ onSubmit }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium mb-1 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
           Email (optional)
         </label>
         <input
@@ -200,34 +247,47 @@ export default function InputForm({ onSubmit }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Get notified when analysis is complete"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className={`w-full rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+          style={inputBase}
         />
       </div>
 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        className="w-full rounded-md px-4 py-2.5 text-sm font-bold font-body transition-colors cursor-pointer disabled:cursor-not-allowed"
+        style={{
+          background: canSubmit ? "var(--smtm-btn-primary-bg)" : "var(--smtm-btn-disabled-bg)",
+          color: canSubmit ? "var(--smtm-btn-primary-text)" : "var(--smtm-btn-disabled-text)",
+        }}
       >
         {submitting ? "Submitting..." : "Analyze"}
       </button>
     </form>
 
     {/* Lookup previous analysis */}
-    <div className="border-t border-gray-200 pt-6">
-      <p className="text-sm font-medium text-gray-700 mb-2">Look up a previous analysis</p>
+    <div className="border-t pt-6" style={{ borderColor: "var(--smtm-border-default)" }}>
+      <p className="text-sm font-medium mb-2 font-body" style={{ color: "var(--smtm-text-secondary)" }}>
+        Look up a previous analysis
+      </p>
       <form onSubmit={handleLookup} className="flex gap-2">
         <input
           type="text"
           value={lookupId}
           onChange={(e) => setLookupId(e.target.value)}
           placeholder="Enter analysis ID"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className={`flex-1 rounded-md border px-3 py-2 text-sm ${inputFocus}`}
+          style={inputBase}
         />
         <button
           type="submit"
           disabled={!lookupId.trim()}
-          className="rounded-md bg-gray-100 border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="rounded-md border px-4 py-2 text-sm font-medium font-body transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          style={{
+            background: "var(--smtm-btn-secondary-bg)",
+            borderColor: "var(--smtm-btn-secondary-border)",
+            color: "var(--smtm-btn-secondary-text)",
+          }}
         >
           Look up
         </button>

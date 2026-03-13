@@ -2,19 +2,22 @@ import { useState } from "react";
 
 const SEVERITY = {
   Critical: {
-    border: "#DC2626",
-    bg: "#FEF2F2",
-    badge: "bg-red-600 text-white",
+    border: "var(--smtm-sev-critical-border)",
+    bg: "var(--smtm-sev-critical-bg)",
+    badgeBg: "var(--smtm-sev-critical-badge-bg)",
+    badgeText: "var(--smtm-sev-critical-badge-text)",
   },
   Moderate: {
-    border: "#D97706",
-    bg: "#FFFBEB",
-    badge: "bg-amber-600 text-white",
+    border: "var(--smtm-sev-moderate-border)",
+    bg: "var(--smtm-sev-moderate-bg)",
+    badgeBg: "var(--smtm-sev-moderate-badge-bg)",
+    badgeText: "var(--smtm-sev-moderate-badge-text)",
   },
   Minor: {
-    border: "#16A34A",
-    bg: "#F0FDF4",
-    badge: "bg-gray-200 text-gray-700",
+    border: "var(--smtm-sev-minor-border)",
+    bg: "var(--smtm-sev-minor-bg)",
+    badgeBg: "var(--smtm-sev-minor-badge-bg)",
+    badgeText: "var(--smtm-sev-minor-badge-text)",
   },
 };
 
@@ -50,33 +53,41 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
       className="rounded-r-lg mb-2.5 transition-all duration-200 overflow-hidden"
       style={{
         borderLeft: `4px solid ${sev.border}`,
-        border: `1px solid ${open ? sev.border + "40" : "#E5E7EB"}`,
+        border: `1px solid ${open ? sev.border : "var(--smtm-border-default)"}`,
         borderLeftWidth: 4,
         borderLeftColor: sev.border,
-        background: open ? sev.bg : "#fff",
+        background: open ? sev.bg : "var(--smtm-bg-surface)",
       }}
     >
       <button
         onClick={() => setOpen(!open)}
         className="flex items-start gap-2.5 w-full p-3.5 bg-transparent border-none cursor-pointer text-left"
       >
-        <span className="text-[13px] font-bold text-gray-400 font-mono min-w-[24px] pt-0.5">
+        <span className="text-[13px] font-bold font-mono min-w-[24px] pt-0.5" style={{ color: "var(--smtm-text-muted)" }}>
           #{number}
         </span>
         <span
-          className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wide font-body shrink-0 ${sev.badge}`}
+          className="inline-block text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wide font-body shrink-0"
+          style={{
+            background: sev.badgeBg,
+            color: sev.badgeText,
+          }}
         >
           {severity}
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-slate-900 leading-snug font-body">
+          <div className="text-sm font-semibold leading-snug font-body" style={{ color: "var(--smtm-text-primary)" }}>
             {title}
           </div>
           <div className="flex gap-1.5 mt-1.5 flex-wrap">
             {issue_types?.map((t) => (
               <span
                 key={t}
-                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-body"
+                className="text-[11px] px-2 py-0.5 rounded-full font-body"
+                style={{
+                  background: "var(--smtm-issue-pill-bg)",
+                  color: "var(--smtm-issue-pill-text)",
+                }}
               >
                 {ISSUE_TYPE_LABELS[t] || t}
               </span>
@@ -84,9 +95,10 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
           </div>
         </div>
         <span
-          className={`text-lg text-gray-400 transition-transform duration-200 shrink-0 ${
+          className={`text-lg transition-transform duration-200 shrink-0 ${
             open ? "rotate-180" : ""
           }`}
+          style={{ color: "var(--smtm-text-muted)" }}
         >
           ▾
         </span>
@@ -96,10 +108,11 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
         <div className="px-4 pb-4 ml-[50px] space-y-3.5">
           {quoted_passage && (
             <blockquote
-              className="m-0 px-4 py-3 rounded-r-md italic text-[13.5px] leading-relaxed text-gray-700 font-display"
+              className="m-0 px-4 py-3 rounded-r-md italic text-[13.5px] leading-relaxed font-display"
               style={{
-                borderLeft: `3px solid ${sev.border}40`,
-                background: `${sev.border}08`,
+                borderLeft: `3px solid ${sev.border}`,
+                background: sev.bg,
+                color: "var(--smtm-text-secondary)",
               }}
             >
               {quoted_passage}
@@ -111,7 +124,8 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
               {explanation.split(/\n\n+/).map((p, i) => (
                 <p
                   key={i}
-                  className="text-sm leading-relaxed text-gray-700 font-body"
+                  className="text-sm leading-relaxed font-body"
+                  style={{ color: "var(--smtm-text-secondary)" }}
                 >
                   {p}
                 </p>
@@ -121,14 +135,21 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
 
           {dig_deeper && (
             <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 font-body">
+              <summary
+                className="cursor-pointer text-sm font-medium font-body"
+                style={{ color: "var(--smtm-dig-label)" }}
+              >
                 Dig Deeper
               </summary>
-              <div className="mt-2 p-3 bg-slate-50 rounded-md space-y-2">
+              <div
+                className="mt-2 p-3 rounded-md space-y-2"
+                style={{ background: "var(--smtm-dig-bg)" }}
+              >
                 {dig_deeper.split(/\n\n+/).map((p, i) => (
                   <p
                     key={i}
-                    className="text-sm leading-relaxed text-gray-600 font-body"
+                    className="text-sm leading-relaxed font-body"
+                    style={{ color: "var(--smtm-text-secondary)" }}
                   >
                     {p}
                   </p>
@@ -142,7 +163,11 @@ export default function AnnotationCard({ annotation, defaultOpen = false }) {
               {source_passes.map((s) => (
                 <span
                   key={s}
-                  className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-400 font-body"
+                  className="text-[11px] px-2 py-0.5 rounded font-body"
+                  style={{
+                    background: "var(--smtm-source-badge-bg)",
+                    color: "var(--smtm-source-badge-text)",
+                  }}
                 >
                   {s}
                 </span>

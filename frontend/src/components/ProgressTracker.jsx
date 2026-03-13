@@ -20,7 +20,8 @@ const STAGE_META = {
 function Spinner() {
   return (
     <svg
-      className="h-5 w-5 animate-spin text-blue-500"
+      className="h-5 w-5 animate-spin"
+      style={{ color: "var(--smtm-progress-active)" }}
       viewBox="0 0 24 24"
       fill="none"
     >
@@ -43,7 +44,7 @@ function Spinner() {
 
 function Checkmark() {
   return (
-    <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+    <svg className="h-5 w-5" style={{ color: "var(--smtm-progress-done)" }} viewBox="0 0 20 20" fill="currentColor">
       <path
         fillRule="evenodd"
         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -54,7 +55,7 @@ function Checkmark() {
 }
 
 function PendingDot() {
-  return <div className="h-5 w-5 rounded-full border-2 border-gray-300" />;
+  return <div className="h-5 w-5 rounded-full border-2" style={{ borderColor: "var(--smtm-progress-pending-border)" }} />;
 }
 
 export default function ProgressTracker({ stages, stageOrder }) {
@@ -71,7 +72,7 @@ export default function ProgressTracker({ stages, stageOrder }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm mb-4" style={{ color: "var(--smtm-text-muted)" }}>
         Analysis in progress. This typically takes 5–10 minutes.
       </p>
       <div className="space-y-3">
@@ -87,18 +88,19 @@ export default function ProgressTracker({ stages, stageOrder }) {
               </div>
               <div>
                 <p
-                  className={`text-sm font-medium ${
-                    done
-                      ? "text-green-700"
+                  className="text-sm font-medium font-body"
+                  style={{
+                    color: done
+                      ? "var(--smtm-progress-done)"
                       : active
-                      ? "text-blue-700"
-                      : "text-gray-400"
-                  }`}
+                      ? "var(--smtm-progress-active)"
+                      : "var(--smtm-text-muted)",
+                  }}
                 >
                   {meta.label}
                 </p>
                 {active && (
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: "var(--smtm-text-muted)" }}>
                     {meta.description}
                   </p>
                 )}
