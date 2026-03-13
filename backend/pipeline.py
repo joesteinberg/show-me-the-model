@@ -88,7 +88,7 @@ def _map_model_for_openai(model: str) -> str:
     """Map Anthropic prompt model names to OpenAI equivalents."""
     model_map = {
         "claude-sonnet-4-6": "gpt-5-mini",
-        "claude-opus-4-6": "gpt-5.2",
+        "claude-opus-4-6": "gpt-5.4",
     }
     return model_map.get(model, model)
 
