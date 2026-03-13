@@ -2,36 +2,27 @@
 
 import logging
 import os
-import smtplib
-import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import json
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 logger = logging.getLogger(__name__)
 
 
 async def send_results_email(email: str, analysis_id: str, base_url: str):
-    """Send a results-ready email. Fails silently with a warning log."""
+    """Send a results-ready email via Resend HTTP API. Fails silently with a warning log."""
     try:
-        smtp_host = os.getenv("SMTP_HOST")
-        smtp_port = int(os.getenv("SMTP_PORT", "465"))
-        smtp_user = os.getenv("SMTP_USER")
-        smtp_pass = os.getenv("SMTP_PASS")
-        from_addr = os.getenv("SMTP_FROM", smtp_user)
+        api_key = os.getenv("RESEND_API_KEY")
+        from_addr = os.getenv("SMTP_FROM", "noreply@showmethemodel.io")
 
-        if not all([smtp_host, smtp_user, smtp_pass]):
+        if not api_key:
             logger.warning(
-                "SMTP not configured (missing SMTP_HOST/USER/PASS), skipping email to %s",
+                "RESEND_API_KEY not configured, skipping email to %s",
                 email,
             )
             return
 
         results_url = f"{base_url}/#/results/{analysis_id}"
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "Your Show Me the Model analysis is ready"
-        msg["From"] = from_addr
-        msg["To"] = email
 
         html = f"""\
 <html>
@@ -46,21 +37,30 @@ async def send_results_email(email: str, analysis_id: str, base_url: str):
 </body>
 </html>"""
 
-        msg.attach(MIMEText(html, "html"))
+        payload = json.dumps({
+            "from": from_addr,
+            "to": [email],
+            "subject": "Your Show Me the Model analysis is ready",
+            "html": html,
+        }).encode("utf-8")
 
-        if smtp_port == 465:
-            context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_addr, email, msg.as_string())
-        else:
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(from_addr, email, msg.as_string())
+        req = Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
 
-        logger.info("Results email sent to %s for analysis %s", email, analysis_id)
+        with urlopen(req) as resp:
+            logger.info("Results email sent to %s for analysis %s (status %s)", email, analysis_id, resp.status)
 
+    except URLError as exc:
+        logger.warning(
+            "Failed to send email to %s for analysis %s: %s", email, analysis_id, exc, exc_info=True
+        )
     except Exception:
         logger.warning(
             "Failed to send email to %s for analysis %s", email, analysis_id, exc_info=True
