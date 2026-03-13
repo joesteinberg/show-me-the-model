@@ -6,7 +6,7 @@
 |---------|---------|---------|
 | **DigitalOcean** | VPS hosting (Ubuntu 24.04 Droplet) | digitalocean.com |
 | **Cloudflare** | Domain registrar + DNS | cloudflare.com |
-| **Resend** | Transactional email (SMTP) | resend.com |
+| **Resend** | Transactional email (HTTP API) | resend.com |
 | **GitHub** | Source code | github.com/joesteinberg/show-me-the-model |
 
 ## Server Details
@@ -27,14 +27,14 @@
 ├── prompts/                     # LLM prompt YAML files
 ├── results/                     # Saved analysis JSON files
 ├── venv/                        # Python virtual environment
-└── .env                         # Environment variables (SMTP config, CORS)
+└── .env                         # Environment variables (Resend API key, CORS)
 ```
 
 ## Key Config Files on Server
 
 | File | Purpose |
 |------|---------|
-| `/opt/show-me-the-model/.env` | Environment variables (SMTP, CORS) |
+| `/opt/show-me-the-model/.env` | Environment variables (Resend API key, CORS) |
 | `/etc/systemd/system/smtm.service` | Backend service definition |
 | `/etc/nginx/sites-available/showmethemodel` | Nginx config (frontend + API proxy) |
 
@@ -125,12 +125,12 @@ Located at `/opt/show-me-the-model/.env`:
 
 ```
 ALLOWED_ORIGINS=https://showmethemodel.io,https://www.showmethemodel.io
-SMTP_HOST=smtp.resend.com
-SMTP_PORT=465
-SMTP_USER=resend
-SMTP_PASS=<your-resend-api-key>
+RESEND_API_KEY=re_xxxxxxxx
 SMTP_FROM=noreply@showmethemodel.io
 ```
+
+Note: DigitalOcean blocks outbound SMTP ports (465/587), so email is sent via
+Resend's HTTP API (`https://api.resend.com/emails`), not SMTP.
 
 After editing `.env`, restart the backend: `systemctl restart smtm`
 
@@ -186,11 +186,13 @@ cd /opt/show-me-the-model/frontend && npx vite build
 Then hard-refresh browser (Ctrl+Shift+R) to bust cache.
 
 ### Email not sending
-Check logs for SMTP errors:
+Check logs for email errors:
 ```bash
 journalctl -u smtm | grep -i email
 ```
-Verify `.env` has correct SMTP credentials and restart backend.
+Verify `.env` has correct `RESEND_API_KEY` and restart backend.
+Note: Python's urllib default User-Agent is blocked by Resend's WAF — the code
+includes a custom `User-Agent: ShowMeTheModel/1.0` header to work around this.
 
 ### SSH connection refused
 Droplet may need reboot from DigitalOcean dashboard (Power → Power Cycle).
