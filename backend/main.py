@@ -127,7 +127,7 @@ async def _run_job(job_id: str, api_key: str, base_url: str, provider: str):
         logger.info("Saved result to %s (analysis_id=%s)", result_path, analysis_id)
 
         if job.email:
-            await send_results_email(job.email, job.id, base_url)
+            await send_results_email(job.email, analysis_id, base_url)
 
     except Exception as exc:
         logger.exception("Pipeline failed for job %s", job_id)
