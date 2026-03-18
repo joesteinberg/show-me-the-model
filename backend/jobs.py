@@ -1,9 +1,9 @@
 """In-memory job store with per-job asyncio.Queue for SSE streaming."""
 
 import asyncio
+import logging
 import time
 import uuid
-import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -11,6 +11,14 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 JOB_TTL_SECONDS = 24 * 60 * 60  # 24 hours
+
+# Human-readable labels for pipeline stages (used by SSE events)
+STAGE_NAMES: dict[str, str] = {
+    "decomposition": "Decomposition",
+    "stage2": "Analysis Passes",
+    "dedup": "Dedup & Merge",
+    "synthesis": "Synthesis",
+}
 
 
 class JobStatus(str, Enum):
@@ -87,11 +95,7 @@ class JobStore:
     def cleanup_expired(self):
         """Remove jobs older than TTL."""
         now = time.time()
-        expired = [
-            jid
-            for jid, job in self._jobs.items()
-            if now - job.created_at > JOB_TTL_SECONDS
-        ]
+        expired = [jid for jid, job in self._jobs.items() if now - job.created_at > JOB_TTL_SECONDS]
         for jid in expired:
             del self._jobs[jid]
         if expired:

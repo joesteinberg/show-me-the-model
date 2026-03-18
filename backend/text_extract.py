@@ -1,7 +1,7 @@
 """Text extraction from URLs, PDFs, and raw text with validation."""
 
-import re
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +29,7 @@ def validate_text(text: str) -> str:
     if not text or not text.strip():
         raise ValueError("Text input is empty")
     if len(text) > MAX_TEXT_LENGTH:
-        raise ValueError(
-            f"Text too long ({len(text)} chars). Maximum is {MAX_TEXT_LENGTH}."
-        )
+        raise ValueError(f"Text too long ({len(text)} chars). Maximum is {MAX_TEXT_LENGTH}.")
     return text.strip()
 
 
@@ -59,9 +57,7 @@ async def extract_from_pdf(file_bytes: bytes) -> str:
     import pymupdf
 
     if len(file_bytes) > MAX_PDF_SIZE:
-        raise ValueError(
-            f"PDF too large ({len(file_bytes)} bytes). Maximum is {MAX_PDF_SIZE}."
-        )
+        raise ValueError(f"PDF too large ({len(file_bytes)} bytes). Maximum is {MAX_PDF_SIZE}.")
     doc = pymupdf.open(stream=file_bytes, filetype="pdf")
     pages = []
     for page in doc:

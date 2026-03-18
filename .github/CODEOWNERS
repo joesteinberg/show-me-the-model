@@ -1,0 +1,8 @@
+# Default owner for everything
+* @joesteinberg
+
+# Prompt system — changes should be reviewed by the maintainer
+/prompts/ @joesteinberg
+
+# Eval gold-standard data — don't modify casually
+/eval/gold-standard/ @joesteinberg

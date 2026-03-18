@@ -10,8 +10,10 @@ Stage 3:   Synthesis (1 Opus call)
 import asyncio
 import json
 import logging
-from pathlib import Path
+from typing import Any
+
 from anthropic import AsyncAnthropic
+from anthropic.types import TextBlock
 from openai import AsyncOpenAI
 
 from backend.prompt_loader import load_and_render, load_field_examples
@@ -22,12 +24,15 @@ logger = logging.getLogger(__name__)
 # Keys must match the model strings actually sent to each API.
 _PRICING = {
     # Anthropic
-    "claude-sonnet-4-6":  {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-opus-4-6":    {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
+    "claude-sonnet-4-6": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
+    "claude-opus-4-6": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
     # OpenAI (mapped names)
-    "gpt-5-mini":         {"input": 1.50 / 1e6, "output": 6.00 / 1e6},
-    "gpt-5.4":            {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    "gpt-5-mini": {"input": 1.50 / 1e6, "output": 6.00 / 1e6},
+    "gpt-5.4": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
 }
+
+# Default number of JSON-parse retry attempts.
+_DEFAULT_RETRIES = 2
 
 
 def _estimate_cost(usage_records: list[dict]) -> float:
@@ -39,6 +44,16 @@ def _estimate_cost(usage_records: list[dict]) -> float:
         total += rec["output_tokens"] * prices["output"]
     return round(total, 4)
 
+
+# Each tuple is (prompt_yaml_filename, pass_name_key).
+# The six passes analyze the same essay through different economic lenses:
+#   identities    — accounting identities and hidden assumptions
+#   general_eq    — general-equilibrium effects ignored by partial analysis
+#   exog_endog    — which variables the author treats as fixed vs. determined
+#   quantitative  — empirical claims, magnitudes, and missing data
+#   consistency   — internal contradictions and logical gaps
+#   steelman      — strongest version of the argument + counterarguments
+# All six run in parallel (batched for rate limits); results are merged in Stage 2.5.
 STAGE2_PASSES = [
     ("stage2_identities.yaml", "identities"),
     ("stage2_general_eq.yaml", "general_eq"),
@@ -56,7 +71,7 @@ async def _call_claude(
     user_prompt: str,
     temperature: float,
     max_tokens: int,
-    retries: int = 2,
+    retries: int = _DEFAULT_RETRIES,
 ) -> tuple[str, dict]:
     """Make a single Claude API call and return (text, usage_record).
 
@@ -74,7 +89,10 @@ async def _call_claude(
             system=system_prompt,
             messages=messages,
         )
-        text = response.content[0].text
+        text_block = response.content[0]
+        if not isinstance(text_block, TextBlock):
+            raise ValueError(f"Expected TextBlock, got {type(text_block).__name__}")
+        text = text_block.text
         total_input += response.usage.input_tokens
         total_output += response.usage.output_tokens
 
@@ -99,12 +117,15 @@ async def _call_claude(
                 messages = [
                     {"role": "user", "content": user_prompt},
                     {"role": "assistant", "content": text},
-                    {"role": "user", "content": (
-                        "Your response contained invalid JSON. Please return the "
-                        "complete response again as valid JSON. Ensure all strings "
-                        "are properly escaped (especially quotes and newlines within "
-                        "strings). Return only the JSON, no other text."
-                    )},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Your response contained invalid JSON. Please return the "
+                            "complete response again as valid JSON. Ensure all strings "
+                            "are properly escaped (especially quotes and newlines within "
+                            "strings). Return only the JSON, no other text."
+                        ),
+                    },
                 ]
             else:
                 # Last attempt failed. Return as-is, let caller handle it.
@@ -132,7 +153,7 @@ async def _call_openai(
     user_prompt: str,
     temperature: float,
     max_tokens: int,
-    retries: int = 2,
+    retries: int = _DEFAULT_RETRIES,
 ) -> tuple[str, dict]:
     """Make a single OpenAI Chat Completions API call and return (text, usage_record)."""
     model = _map_model_for_openai(model)
@@ -163,8 +184,7 @@ async def _call_openai(
 
         if choice.finish_reason == "length":
             logger.warning(
-                f"OpenAI response truncated ({len(text)} chars). "
-                f"Consider increasing max_tokens."
+                f"OpenAI response truncated ({len(text)} chars). Consider increasing max_tokens."
             )
 
         try:
@@ -197,14 +217,14 @@ async def _call_openai(
 
 
 async def _call_model(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     provider: str,
     model: str,
     system_prompt: str,
     user_prompt: str,
     temperature: float,
     max_tokens: int,
-    retries: int = 2,
+    retries: int = _DEFAULT_RETRIES,
 ) -> tuple[str, dict]:
     """Route model calls to Claude or OpenAI. Returns (text, usage_record)."""
     if provider == "openai":
@@ -229,26 +249,14 @@ async def _call_model(
     )
 
 
-# Directory for saving raw responses for debugging
-_RAW_OUTPUT_DIR = Path(__file__).parent.parent / "eval" / "outputs" / "_raw"
-
-
-def _save_raw(stage_name: str, text: str):
-    """Save raw API response for debugging."""
-    _RAW_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    path = _RAW_OUTPUT_DIR / f"{stage_name}.txt"
-    path.write_text(text)
-    logger.debug(f"Saved raw response to {path}")
-
-
-def _extract_json(text: str) -> dict:
+def _extract_json(text: str) -> dict[str, Any]:
     """Extract JSON from a response that might contain markdown fences or truncation."""
     text = text.strip()
     # Strip ```json ... ``` fences
     if text.startswith("```"):
         lines = text.split("\n")
         # Remove first line (```json) and last line (```)
-        lines = [l for l in lines[1:] if not l.strip() == "```"]
+        lines = [line for line in lines[1:] if not line.strip() == "```"]
         text = "\n".join(lines)
     try:
         return json.loads(text)
@@ -290,7 +298,7 @@ def _repair_truncated_json(text: str) -> str:
         if escape:
             escape = False
             continue
-        if ch == '\\' and in_string:
+        if ch == "\\" and in_string:
             escape = True
             continue
         if ch == '"':
@@ -298,15 +306,15 @@ def _repair_truncated_json(text: str) -> str:
             continue
         if in_string:
             continue
-        if ch in ('{', '['):
+        if ch in ("{", "["):
             stack.append(ch)
-        elif ch == '}':
+        elif ch == "}":
             stack.pop() if stack else None
             # After closing, if we're back to depth 1 (inside the root object/array),
             # this is a safe truncation point (right after a complete nested value)
             if len(stack) <= 2:
                 safe_positions.append(i + 1)
-        elif ch == ']':
+        elif ch == "]":
             stack.pop() if stack else None
             if len(stack) <= 2:
                 safe_positions.append(i + 1)
@@ -328,7 +336,7 @@ def _repair_truncated_json(text: str) -> str:
         if escape:
             escape = False
             continue
-        if ch == '\\' and in_string:
+        if ch == "\\" and in_string:
             escape = True
             continue
         if ch == '"':
@@ -336,24 +344,28 @@ def _repair_truncated_json(text: str) -> str:
             continue
         if in_string:
             continue
-        if ch == '{':
+        if ch == "{":
             open_braces += 1
-        elif ch == '}':
+        elif ch == "}":
             open_braces -= 1
-        elif ch == '[':
+        elif ch == "[":
             open_brackets += 1
-        elif ch == ']':
+        elif ch == "]":
             open_brackets -= 1
 
-    result = truncated + ']' * open_brackets + '}' * open_braces
+    result = truncated + "]" * open_brackets + "}" * open_braces
 
     cut = len(text) - last_safe
-    logger.warning(f"Repaired truncated JSON (cut {cut} trailing chars, "
-                   f"closed {open_brackets} brackets, {open_braces} braces)")
+    logger.warning(
+        f"Repaired truncated JSON (cut {cut} trailing chars, "
+        f"closed {open_brackets} brackets, {open_braces} braces)"
+    )
     return result
 
 
-async def run_stage1(client, source_text: str, provider: str = "anthropic") -> tuple[dict, dict]:
+async def run_stage1(
+    client: AsyncAnthropic | AsyncOpenAI, source_text: str, provider: str = "anthropic"
+) -> tuple[dict, dict]:
     """Stage 1: Decompose the source text into structural components."""
     logger.info("Stage 1: Decomposition")
     prompt = load_and_render("stage1_decomposition.yaml", source_text=source_text)
@@ -370,7 +382,7 @@ async def run_stage1(client, source_text: str, provider: str = "anthropic") -> t
 
 
 async def _run_single_pass(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     provider: str,
     yaml_file: str,
     pass_name: str,
@@ -379,7 +391,7 @@ async def _run_single_pass(
     field_examples: dict[str, str] | None = None,
 ) -> tuple[str, dict, dict]:
     """Run a single Stage 2 analysis pass. Returns (pass_name, result_dict, usage)."""
-    logger.info(f"Stage 2: {pass_name}")
+    logger.info("Stage 2: %s", pass_name)
     runtime_vars = dict(
         source_text=source_text,
         decomposition=decomposition_json,
@@ -401,7 +413,7 @@ async def _run_single_pass(
 
 
 async def run_stage2(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     source_text: str,
     decomposition: dict,
     provider: str = "anthropic",
@@ -424,19 +436,24 @@ async def run_stage2(
     # Load field-specific examples based on stage 1 classification
     field = decomposition.get("field", "macro_fiscal")
     field_examples = load_field_examples(field)
-    logger.info(f"  Field classification: {field}")
+    logger.info("  Field classification: %s", field)
 
     results = {}
     usage_records = []
     for i in range(0, len(STAGE2_PASSES), batch_size):
-        batch = STAGE2_PASSES[i:i + batch_size]
+        batch = STAGE2_PASSES[i : i + batch_size]
         if i > 0:
-            logger.info(f"  Rate limit pause ({batch_delay}s)...")
+            logger.info("  Rate limit pause (%.1fs)...", batch_delay)
             await asyncio.sleep(batch_delay)
         tasks = [
             _run_single_pass(
-                client, provider, yaml_file, name,
-                source_text, decomposition_json, field_examples,
+                client,
+                provider,
+                yaml_file,
+                name,
+                source_text,
+                decomposition_json,
+                field_examples,
             )
             for yaml_file, name in batch
         ]
@@ -449,7 +466,7 @@ async def run_stage2(
 
 
 async def run_stage2_5(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     decomposition: dict,
     stage2_results: dict[str, dict],
     provider: str = "anthropic",
@@ -481,7 +498,7 @@ async def run_stage2_5(
 
 
 async def run_stage3(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     source_text: str,
     decomposition: dict,
     merged_annotations: dict,
@@ -508,7 +525,7 @@ async def run_stage3(
 
 
 async def run_pipeline(
-    client,
+    client: AsyncAnthropic | AsyncOpenAI,
     source_text: str,
     provider: str = "anthropic",
     on_stage_complete=None,
@@ -567,7 +584,7 @@ async def run_pipeline(
         on_stage_complete("synthesis", synthesis)
 
     estimated_cost = _estimate_cost(all_usage)
-    logger.info(f"Pipeline complete. Estimated API cost: ${estimated_cost:.4f}")
+    logger.info("Pipeline complete. Estimated API cost: $%.4f", estimated_cost)
 
     return {
         "workflow": provider,

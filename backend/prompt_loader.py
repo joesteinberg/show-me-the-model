@@ -6,10 +6,10 @@ Two-stage templating:
   2. Runtime resolution: {{ source_text }}, {{ decomposition }}, etc. resolved at call time
 """
 
-import os
 import re
-import yaml
 from pathlib import Path
+
+import yaml
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 SHARED_DIR = PROMPTS_DIR / "shared"
@@ -42,6 +42,7 @@ def _load_shared() -> dict[str, str]:
 
 def _resolve_templates(text: str, variables: dict[str, str]) -> str:
     """Replace {{ variable }} placeholders with values from the variables dict."""
+
     def replacer(match):
         key = match.group(1).strip()
         if key in variables:

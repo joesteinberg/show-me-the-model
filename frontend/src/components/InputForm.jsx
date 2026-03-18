@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useApiSettings from "../hooks/useApiSettings";
 
 const TABS = [
   { key: "text", label: "Paste Text" },
@@ -16,25 +17,10 @@ export default function InputForm({ onSubmit }) {
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
-  const [provider, setProvider] = useState(() => localStorage.getItem("smtm_provider") || "anthropic");
-  const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem("smtm_api_key_anthropic") || "");
-  const [openaiKey, setOpenaiKey] = useState(() => localStorage.getItem("smtm_api_key_openai") || "");
+  const { anthropicKey, setAnthropicKey, openaiKey, setOpenaiKey, provider, setProvider, activeKey } =
+    useApiSettings();
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (anthropicKey) localStorage.setItem("smtm_api_key_anthropic", anthropicKey);
-  }, [anthropicKey]);
-
-  useEffect(() => {
-    if (openaiKey) localStorage.setItem("smtm_api_key_openai", openaiKey);
-  }, [openaiKey]);
-
-  useEffect(() => {
-    localStorage.setItem("smtm_provider", provider);
-  }, [provider]);
-
-  const activeKey = provider === "openai" ? openaiKey : anthropicKey;
 
   const hasInput =
     (tab === "text" && text.trim().length > 0) ||
