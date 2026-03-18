@@ -194,9 +194,9 @@ function AssumptionRow({ assumption, index }) {
 }
 
 export default function AssumptionsTable({ assumptions }) {
-  if (!assumptions?.length) return null;
+  const sorted = useMemo(() => sortByImplausibility(assumptions ?? []), [assumptions]);
 
-  const sorted = useMemo(() => sortByImplausibility(assumptions), [assumptions]);
+  if (!assumptions?.length) return null;
 
   const thStyle = {
     color: "var(--smtm-text-muted)",

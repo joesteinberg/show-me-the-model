@@ -112,7 +112,7 @@ export default function ProgressTracker({ stages, stageOrder, jobId }) {
             </button>
           </div>
           <p className="text-xs leading-relaxed m-0" style={{ color: "var(--smtm-text-muted)" }}>
-            Save this ID for your records. If you get disconnected, the analysis will still complete in the background. Once it finishes, you'll receive a shareable analysis ID on the results page.
+            Save this ID for your records. If you get disconnected, the analysis will still complete in the background. Once it finishes, you&apos;ll receive a shareable analysis ID on the results page.
           </p>
         </div>
       )}
