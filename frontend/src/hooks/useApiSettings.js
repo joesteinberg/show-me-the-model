@@ -35,7 +35,10 @@ export default function useApiSettings() {
   function setRememberKeys(remember) {
     setRememberKeysRaw(remember);
     localStorage.setItem(STORAGE_KEY_REMEMBER, String(remember));
-    if (!remember) {
+    if (remember) {
+      if (anthropicKey) localStorage.setItem(STORAGE_KEY_ANTHROPIC, anthropicKey);
+      if (openaiKey) localStorage.setItem(STORAGE_KEY_OPENAI, openaiKey);
+    } else {
       localStorage.removeItem(STORAGE_KEY_ANTHROPIC);
       localStorage.removeItem(STORAGE_KEY_OPENAI);
     }
@@ -45,6 +48,9 @@ export default function useApiSettings() {
     if (anthropicKey) {
       sessionStorage.setItem(STORAGE_KEY_ANTHROPIC, anthropicKey);
       if (rememberKeys) localStorage.setItem(STORAGE_KEY_ANTHROPIC, anthropicKey);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY_ANTHROPIC);
+      localStorage.removeItem(STORAGE_KEY_ANTHROPIC);
     }
   }, [anthropicKey, rememberKeys]);
 
@@ -52,6 +58,9 @@ export default function useApiSettings() {
     if (openaiKey) {
       sessionStorage.setItem(STORAGE_KEY_OPENAI, openaiKey);
       if (rememberKeys) localStorage.setItem(STORAGE_KEY_OPENAI, openaiKey);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY_OPENAI);
+      localStorage.removeItem(STORAGE_KEY_OPENAI);
     }
   }, [openaiKey, rememberKeys]);
 
