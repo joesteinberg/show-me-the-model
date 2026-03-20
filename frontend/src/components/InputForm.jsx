@@ -153,7 +153,7 @@ export default function InputForm({ onSubmit }) {
         </div>
       </div>
       <p className="text-xs -mt-2" style={{ color: "var(--smtm-text-muted)" }}>
-        Don't have a key?{" "}
+        Don&apos;t have a key?{" "}
         <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" style={{ color: "var(--smtm-accent-teal)" }}>Get one from Anthropic</a>
         {" "}or{" "}
         <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: "var(--smtm-accent-teal)" }}>OpenAI</a>.
