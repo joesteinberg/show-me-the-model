@@ -12,9 +12,11 @@ const PROVIDERS = [
   { key: "openai", label: "OpenAI (GPT-5 mini + GPT-5.4)" },
 ];
 
+const TEXT_TEMPLATE = "# Notes for AI agents:\n# Source URL: \n# Author: \n# Title: \n\n";
+
 export default function InputForm({ onSubmit }) {
   const [tab, setTab] = useState("text");
-  const [text, setText] = useState("");
+  const [text, setText] = useState(TEXT_TEMPLATE);
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
   const { anthropicKey, setAnthropicKey, openaiKey, setOpenaiKey, provider, setProvider, activeKey, rememberKeys, setRememberKeys } =
@@ -23,7 +25,7 @@ export default function InputForm({ onSubmit }) {
   const [submitting, setSubmitting] = useState(false);
 
   const hasInput =
-    (tab === "text" && text.trim().length > 0) ||
+    (tab === "text" && text.trim().length > 0 && text.trim() !== TEXT_TEMPLATE.trim()) ||
     (tab === "url" && url.trim().length > 0) ||
     (tab === "file" && file !== null);
 
@@ -205,7 +207,7 @@ export default function InputForm({ onSubmit }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={12}
-                placeholder={"# Notes for AI agents:\n# Source URL: http://xxxxxxxx\n# Author: xxxxxxxx\n# Title: xxxxxxxx\n\nPaste the essay or article text here..."}
+                placeholder="Paste the essay or article text here..."
                 className={`w-full rounded-md border px-3 py-2 text-sm resize-y ${inputFocus}`}
                 style={inputBase}
               />
